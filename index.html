@@ -130,9 +130,9 @@ textarea.inp{min-height:90px;resize:vertical}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* ---------- setup ---------- */
-.center{flex:1;display:flex;align-items:center;justify-content:center;padding:28px}
+.center{flex:1;display:flex;align-items:safe center;justify-content:center;padding:28px;overflow:auto;-webkit-overflow-scrolling:touch}
 .setup{width:min(440px,100%)}
-.setup .logo{width:150px;margin-bottom:34px}
+.setup .logo{width:96px;margin-bottom:24px}
 .setup h1{font-size:30px;font-weight:600;margin:10px 0 10px}
 .setup p{color:var(--lsilver);line-height:1.55;margin-bottom:26px}
 .link{color:var(--silver);text-decoration:underline;text-underline-offset:4px;margin-top:26px;font-size:15px}
@@ -210,6 +210,7 @@ textarea.inp{min-height:90px;resize:vertical}
 
 <!-- ============ SETUP ============ -->
 <section id="setup" class="screen hidden">
+  <button class="ghost" id="toOffice2" style="position:absolute;top:calc(16px + var(--st));right:16px;width:auto;margin:0;padding:12px 18px;z-index:2">Office sign in</button>
   <div class="center"><div class="setup">
     <svg class="logo" viewBox="211 199 624 736" aria-label="Prime One"><path fill="#fff" fill-rule="evenodd" id="logoPath"/></svg>
     <div class="label">Time clock</div>
@@ -219,7 +220,8 @@ textarea.inp{min-height:90px;resize:vertical}
     <div class="field"><label class="label" for="setupName">Device name (optional)</label><input id="setupName" class="inp" maxlength="60" placeholder="e.g. Wendell iPad"></div>
     <button class="big" id="setupGo">Activate</button>
     <div class="msg" id="setupMsg"></div>
-    <button class="link" id="toOffice">Office sign in</button>
+    <button class="ghost" id="toOffice" style="margin-top:22px">Office sign in</button>
+    <p style="font-size:13px;color:var(--steel);margin:10px 0 0">Office: Juliana, Andre, Scott and Gelson. Sign in with your cell number and PIN.</p>
   </div></div>
 </section>
 
@@ -239,6 +241,7 @@ textarea.inp{min-height:90px;resize:vertical}
     <button id="btnOther"><svg viewBox="0 0 256 256"><path fill="currentColor" d="M128 28a100 100 0 1 0 100 100A100.11 100.11 0 0 0 128 28Zm0 192a92 92 0 1 1 92-92 92.1 92.1 0 0 1-92 92Zm4-52a8 8 0 1 1-8-8 8 8 0 0 1 8 8Zm24-60c0 15.6-12.68 26.76-28 27.93V144a4 4 0 0 1-8 0v-12a4 4 0 0 1 4-4c13.23 0 24-8.61 24-20s-10.77-20-24-20-24 8.61-24 20a4 4 0 0 1-8 0c0-15.44 14.36-28 32-28s32 12.56 32 28Z"/></svg>Not on the list?</button>
     <button id="btnFix"><svg viewBox="0 0 256 256"><path fill="currentColor" d="M128 28a100 100 0 1 0 100 100A100.11 100.11 0 0 0 128 28Zm0 192a92 92 0 1 1 92-92 92.1 92.1 0 0 1-92 92Zm60-92a4 4 0 0 1-4 4h-56a4 4 0 0 1-4-4V72a4 4 0 0 1 8 0v52h52a4 4 0 0 1 4 4Z"/></svg>Fix a punch</button>
     <button id="btnMgr"><svg viewBox="0 0 256 256"><path fill="currentColor" d="M208 44H48a12 12 0 0 0-12 12v56c0 54.65 26.65 87.86 49 106.15 24.28 19.87 48.17 26.62 49.17 26.9a3.94 3.94 0 0 0 2.12 0c1-.28 24.89-7 49.17-26.9C207.35 199.86 234 166.65 234 112V56a12 12 0 0 0-12-12Zm4 68c0 42.07-17.44 76-51.83 100.89A139.86 139.86 0 0 1 128 228.88a139.86 139.86 0 0 1-32.17-16C61.44 188 44 154.07 44 112V56a4 4 0 0 1 4-4h160a4 4 0 0 1 4 4Zm-38.83-12.83a4 4 0 0 1 0 5.66l-56 56a4 4 0 0 1-5.66 0l-24-24a4 4 0 0 1 5.66-5.66L114 152.34l53.17-53.17a4 4 0 0 1 5.66 0Z"/></svg>Manager</button>
+    <button id="btnOffice"><svg viewBox="0 0 256 256"><path fill="currentColor" d="M216 68h-44v-12a20 20 0 0 0-20-20h-48a20 20 0 0 0-20 20v12H40a12 12 0 0 0-12 12v128a12 12 0 0 0 12 12h176a12 12 0 0 0 12-12V80a12 12 0 0 0-12-12ZM92 56a12 12 0 0 1 12-12h48a12 12 0 0 1 12 12v12H92Zm128 152a4 4 0 0 1-4 4H40a4 4 0 0 1-4-4V80a4 4 0 0 1 4-4h176a4 4 0 0 1 4 4Z"/></svg>Office</button>
   </div>
 </section>
 
@@ -356,6 +359,7 @@ $('#setupGo').onclick = async () => {
   $('#setupGo').disabled = false; $('#setupGo').textContent = 'Activate';
 };
 $('#toOffice').onclick = () => officeLogin();
+$('#toOffice2').onclick = () => officeLogin();
 
 /* ---------------- kiosk ---------------- */
 let ROSTER = { people: [] };
@@ -390,6 +394,7 @@ function renderTiles() {
     pinSheet({ employeeId: p.id, title: p.name, next: 'punch' });
   });
 }
+$('#btnOffice').onclick = () => officeLogin();
 $('#btnOther').onclick = () => pinSheet({ byPhone: true, title: 'Clock in at this store', next: 'punch' });
 $('#btnFix').onclick = () => pickPerson('Fix a punch', 'Who needs a fix?', ROSTER.people, p => pinSheet({ employeeId: p.id, title: p.name, next: 'fix' }));
 $('#btnMgr').onclick = () => {
@@ -821,7 +826,12 @@ setInterval(() => {
   const idle = !$('#layer').innerHTML && $('#office').classList.contains('hidden');
   const now = new Date();
   const nightly = now.getHours() === 3 && lastNightly !== now.toDateString();
-  if (idle && (NEEDS_UPDATE || nightly)) { lastNightly = now.toDateString(); location.reload(); }
+  let lastReload = 0; try { lastReload = +(localStorage.getItem('p1.reloadAt') || 0); } catch (e) {}
+  if (idle && (NEEDS_UPDATE || nightly) && Date.now() - lastReload > 30 * 60000) {
+    lastNightly = now.toDateString();
+    try { localStorage.setItem('p1.reloadAt', String(Date.now())); } catch (e) {}
+    location.reload();
+  }
 }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('p1.device') && !$('#kiosk').classList.contains('hidden')) loadRoster(true); });
 
@@ -835,6 +845,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
   let t = ''; try { t = sessionStorage.getItem('p1.office') || ''; } catch (e) {}
   if (t) { OFF.token = t; show('office'); officeLoad(); return; }
   if (store.get('p1.device')) startKiosk(); else show('setup');
+  if (/[?&]office\b/.test(location.search)) officeLogin();
 })();
 </script>
 </body>
