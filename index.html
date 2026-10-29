@@ -287,6 +287,15 @@ select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg 
   .tiles{grid-template-columns:1fr 1fr;gap:10px}.tile{min-height:112px;padding:16px 14px}.tile .nm{font-size:17px}
   .bar button{font-size:13px;padding:18px 6px;flex-direction:column;gap:6px}
 }
+
+/* ---- daily welcome intro (approved Oct 29: line -> brushed metal -> solid white, cinematic pace) ---- */
+#p1intro{position:fixed;inset:0;z-index:9999;background:radial-gradient(70% 75% at 50% 44%,#212a38 0%,#161C27 55%,#0e1219 100%);transition:opacity .6s ease;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#p1intro[hidden]{display:none}
+#p1intro.out{opacity:0;pointer-events:none}
+#p1intro.out.held{pointer-events:auto}
+#p1intro .p1i-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#p1intro .p1i-skip{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));font:500 11px/1 var(--font);letter-spacing:.16em;text-transform:uppercase;color:rgba(213,217,224,.35);opacity:0;transition:opacity .6s ease 1s}
+#p1intro.live .p1i-skip{opacity:1}
 </style>
 </head>
 <body>
@@ -359,6 +368,31 @@ select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg 
 </section>
 
 <div id="layer"></div>
+<div id="p1intro" hidden aria-hidden="true"><svg class="p1i-svg" viewBox="-213 107 1472 920" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <linearGradient id="p1i-satin" gradientUnits="userSpaceOnUse" x1="0" y1="199" x2="0" y2="770">
+            <stop offset="0" stop-color="#e6e9ee"/><stop offset=".42" stop-color="#bcc2cb"/><stop offset=".8" stop-color="#8c939e"/><stop offset="1" stop-color="#737b87"/>
+          </linearGradient>
+          <linearGradient id="p1i-sheen" gradientUnits="userSpaceOnUse" x1="-300" y1="0" x2="300" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".35" stop-color="#fff" stop-opacity=".08"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset=".65" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="p1i-word" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6e9ee"/><stop offset="1" stop-color="#A9AFB8"/></linearGradient>
+          <pattern id="p1i-brush" patternUnits="userSpaceOnUse" width="512" height="512"><image class="p1i-brushimg" width="512" height="512" href=""/></pattern>
+          <clipPath id="p1i-clip"><path clip-rule="evenodd" d="M373.3 204.0Q377.0 199.2 383.0 199.2L691.0 199.2Q697.0 199.2 701.4 203.3L791.6 285.9Q796.0 290.0 796.0 296.0L796.0 500.0Q796.0 505.0 791.0 505.0L400.5 505.0Q392.5 505.0 392.5 513.0L392.5 640.0Q392.5 648.0 387.3 654.1L290.4 769.2Q289.8 770.0 289.8 769.0L289.8 406.0Q289.8 405.0 290.5 405.7L388.3 498.3Q389.0 499.0 389.0 498.0L389.9 408.0Q390.0 401.0 397.0 401.0L685.0 401.0Q692.0 401.0 692.0 394.0L692.0 310.6Q692.0 303.6 685.0 303.6L298.0 303.6Q296.0 303.6 297.2 302.0Z"/></clipPath>
+        </defs>
+        <g class="p1i-push-g">
+          <g class="p1i-metal" clip-path="url(#p1i-clip)">
+            <rect x="280" y="190" width="530" height="590" fill="url(#p1i-satin)"/>
+            <rect x="280" y="190" width="530" height="590" fill="url(#p1i-brush)" opacity=".5"/>
+            <rect class="p1i-sheen" x="-400" y="100" width="1800" height="800" fill="url(#p1i-sheen)"/>
+          </g>
+          <path class="p1i-solid" fill-rule="evenodd" fill="#FFFFFF" opacity="0" d="M373.3 204.0Q377.0 199.2 383.0 199.2L691.0 199.2Q697.0 199.2 701.4 203.3L791.6 285.9Q796.0 290.0 796.0 296.0L796.0 500.0Q796.0 505.0 791.0 505.0L400.5 505.0Q392.5 505.0 392.5 513.0L392.5 640.0Q392.5 648.0 387.3 654.1L290.4 769.2Q289.8 770.0 289.8 769.0L289.8 406.0Q289.8 405.0 290.5 405.7L388.3 498.3Q389.0 499.0 389.0 498.0L389.9 408.0Q390.0 401.0 397.0 401.0L685.0 401.0Q692.0 401.0 692.0 394.0L692.0 310.6Q692.0 303.6 685.0 303.6L298.0 303.6Q296.0 303.6 297.2 302.0Z"/>
+          <path class="p1i-edge" d="M373.3 204.0Q377.0 199.2 383.0 199.2L691.0 199.2Q697.0 199.2 701.4 203.3L791.6 285.9Q796.0 290.0 796.0 296.0L796.0 500.0Q796.0 505.0 791.0 505.0L400.5 505.0Q392.5 505.0 392.5 513.0L392.5 640.0Q392.5 648.0 387.3 654.1L290.4 769.2Q289.8 770.0 289.8 769.0L289.8 406.0Q289.8 405.0 290.5 405.7L388.3 498.3Q389.0 499.0 389.0 498.0L389.9 408.0Q390.0 401.0 397.0 401.0L685.0 401.0Q692.0 401.0 692.0 394.0L692.0 310.6Q692.0 303.6 685.0 303.6L298.0 303.6Q296.0 303.6 297.2 302.0Z" pathLength="1000" fill="none" stroke="#D5D9E0" stroke-linejoin="miter"/>
+          <g class="p1i-wfill"><path class="p1i-l" data-cx="242.3" fill="url(#p1i-word)" d="M211.2 874.5L211.2 934.2L211.8 934.8L220.0 935.0L221.5 934.2L221.5 911.8L222.2 911.0L263.0 911.0L268.2 909.8L270.0 908.8L271.8 906.8L272.8 904.8L273.5 901.0L273.5 884.0L272.8 880.2L271.8 878.2L268.2 875.2L263.5 874.0L211.8 874.0ZM221.5 882.2L222.0 881.8L259.0 881.8L261.0 882.5L262.8 884.5L263.2 886.5L263.2 898.5L262.8 900.5L260.5 902.8L258.2 903.2L222.2 903.2L221.5 902.5Z"/><path class="p1i-l" data-cx="321.7" fill="url(#p1i-word)" d="M294.2 885.5L294.2 934.2L294.8 934.8L303.5 934.8L303.8 915.8L304.2 915.2L317.2 915.2L337.2 934.8L348.5 935.0L349.2 934.5L328.8 916.0L329.2 915.2L336.8 915.2L340.2 914.5L342.2 913.5L344.5 910.2L345.0 908.0L345.0 892.2L344.5 890.0L342.2 886.8L337.8 885.0L294.8 885.0ZM303.8 892.5L304.2 892.0L332.0 892.0L334.2 892.8L336.0 895.5L335.8 906.0L334.5 907.8L331.8 908.5L304.5 908.5L303.8 907.8Z"/><path class="p1i-l" data-cx="370.9" fill="url(#p1i-word)" d="M366.2 885.0L366.0 935.5L375.5 935.8L375.8 885.2Z"/><path class="p1i-l" data-cx="431.5" fill="url(#p1i-word)" d="M399.2 885.2L399.5 934.8L406.0 935.0L406.8 934.5L406.8 896.5L407.2 896.0L412.0 903.5L430.8 927.0L432.2 927.0L433.5 926.2L452.2 901.0L454.5 897.0L455.0 897.5L455.0 934.5L455.8 935.0L463.5 934.8L463.8 885.5L463.2 885.0L455.2 885.0L454.2 885.8L432.2 917.0L430.8 916.2L406.8 885.0Z"/><path class="p1i-l" data-cx="512.5" fill="url(#p1i-word)" d="M487.2 885.2L487.0 934.0L487.5 934.8L537.8 934.8L538.0 928.5L537.0 927.8L497.5 928.0L496.5 927.0L496.5 913.2L497.0 912.8L520.8 912.5L521.2 912.0L521.2 906.0L520.5 905.2L497.2 905.2L496.5 904.5L496.8 892.5L497.5 892.0L537.2 892.0L537.8 891.0L537.8 885.8L537.2 885.0Z"/><path class="p1i-l" data-cx="640.2" fill="url(#p1i-word)" d="M607.2 877.5L606.0 879.8L605.0 883.5L605.0 925.5L606.0 929.2L608.2 932.5L610.5 933.8L614.2 934.8L666.2 934.8L670.0 933.8L673.0 931.5L674.8 928.0L675.5 923.8L675.5 885.2L674.8 880.8L673.2 877.8L671.5 876.0L669.5 875.0L664.8 874.0L615.8 874.0L610.2 875.2ZM614.8 882.8L615.5 882.0L665.2 882.2L665.8 883.0L665.5 926.2L664.8 926.8L615.5 926.8L614.8 926.0Z"/><path class="p1i-l" data-cx="731.5" fill="url(#p1i-word)" d="M702.5 885.5L702.5 934.2L703.0 934.8L710.0 935.0L711.0 934.2L711.0 896.2L711.5 896.2L717.8 903.0L753.8 934.8L759.0 935.0L760.5 934.2L760.5 885.5L760.0 885.0L752.2 885.0L751.8 885.8L752.0 923.0L710.0 885.2L703.0 885.0Z"/><path class="p1i-l" data-cx="809.4" fill="url(#p1i-word)" d="M784.0 885.2L784.2 934.8L834.5 934.8L834.8 928.5L833.8 927.8L794.5 928.0L793.0 927.0L793.0 913.2L793.5 912.8L817.0 912.8L817.8 912.2L817.5 905.2L793.5 905.0L793.0 904.5L793.2 892.8L794.5 892.0L833.0 892.2L834.2 891.2L834.2 885.5L833.8 885.0Z"/></g>
+          <g class="p1i-wsolid"><path class="p1i-lw" data-cx="242.3" fill="#FFFFFF" opacity="0" d="M211.2 874.5L211.2 934.2L211.8 934.8L220.0 935.0L221.5 934.2L221.5 911.8L222.2 911.0L263.0 911.0L268.2 909.8L270.0 908.8L271.8 906.8L272.8 904.8L273.5 901.0L273.5 884.0L272.8 880.2L271.8 878.2L268.2 875.2L263.5 874.0L211.8 874.0ZM221.5 882.2L222.0 881.8L259.0 881.8L261.0 882.5L262.8 884.5L263.2 886.5L263.2 898.5L262.8 900.5L260.5 902.8L258.2 903.2L222.2 903.2L221.5 902.5Z"/><path class="p1i-lw" data-cx="321.7" fill="#FFFFFF" opacity="0" d="M294.2 885.5L294.2 934.2L294.8 934.8L303.5 934.8L303.8 915.8L304.2 915.2L317.2 915.2L337.2 934.8L348.5 935.0L349.2 934.5L328.8 916.0L329.2 915.2L336.8 915.2L340.2 914.5L342.2 913.5L344.5 910.2L345.0 908.0L345.0 892.2L344.5 890.0L342.2 886.8L337.8 885.0L294.8 885.0ZM303.8 892.5L304.2 892.0L332.0 892.0L334.2 892.8L336.0 895.5L335.8 906.0L334.5 907.8L331.8 908.5L304.5 908.5L303.8 907.8Z"/><path class="p1i-lw" data-cx="370.9" fill="#FFFFFF" opacity="0" d="M366.2 885.0L366.0 935.5L375.5 935.8L375.8 885.2Z"/><path class="p1i-lw" data-cx="431.5" fill="#FFFFFF" opacity="0" d="M399.2 885.2L399.5 934.8L406.0 935.0L406.8 934.5L406.8 896.5L407.2 896.0L412.0 903.5L430.8 927.0L432.2 927.0L433.5 926.2L452.2 901.0L454.5 897.0L455.0 897.5L455.0 934.5L455.8 935.0L463.5 934.8L463.8 885.5L463.2 885.0L455.2 885.0L454.2 885.8L432.2 917.0L430.8 916.2L406.8 885.0Z"/><path class="p1i-lw" data-cx="512.5" fill="#FFFFFF" opacity="0" d="M487.2 885.2L487.0 934.0L487.5 934.8L537.8 934.8L538.0 928.5L537.0 927.8L497.5 928.0L496.5 927.0L496.5 913.2L497.0 912.8L520.8 912.5L521.2 912.0L521.2 906.0L520.5 905.2L497.2 905.2L496.5 904.5L496.8 892.5L497.5 892.0L537.2 892.0L537.8 891.0L537.8 885.8L537.2 885.0Z"/><path class="p1i-lw" data-cx="640.2" fill="#FFFFFF" opacity="0" d="M607.2 877.5L606.0 879.8L605.0 883.5L605.0 925.5L606.0 929.2L608.2 932.5L610.5 933.8L614.2 934.8L666.2 934.8L670.0 933.8L673.0 931.5L674.8 928.0L675.5 923.8L675.5 885.2L674.8 880.8L673.2 877.8L671.5 876.0L669.5 875.0L664.8 874.0L615.8 874.0L610.2 875.2ZM614.8 882.8L615.5 882.0L665.2 882.2L665.8 883.0L665.5 926.2L664.8 926.8L615.5 926.8L614.8 926.0Z"/><path class="p1i-lw" data-cx="731.5" fill="#FFFFFF" opacity="0" d="M702.5 885.5L702.5 934.2L703.0 934.8L710.0 935.0L711.0 934.2L711.0 896.2L711.5 896.2L717.8 903.0L753.8 934.8L759.0 935.0L760.5 934.2L760.5 885.5L760.0 885.0L752.2 885.0L751.8 885.8L752.0 923.0L710.0 885.2L703.0 885.0Z"/><path class="p1i-lw" data-cx="809.4" fill="#FFFFFF" opacity="0" d="M784.0 885.2L784.2 934.8L834.5 934.8L834.8 928.5L833.8 927.8L794.5 928.0L793.0 927.0L793.0 913.2L793.5 912.8L817.0 912.8L817.8 912.2L817.5 905.2L793.5 905.0L793.0 904.5L793.2 892.8L794.5 892.0L833.0 892.2L834.2 891.2L834.2 885.5L833.8 885.0Z"/></g>
+        </g>
+      </svg><span class="p1i-skip">Tap to skip</span></div>
+
 
 <script>
 /* =====================================================================
@@ -469,6 +503,7 @@ function startKiosk() {
   try { const c = JSON.parse(store.get('p1.roster') || 'null'); if (c && c.people) { ROSTER = c; renderTiles(); } } catch (e) {}
   loadRoster(); flushQueue();
   clearInterval(rosterT); rosterT = setInterval(() => { if (!$('#layer').innerHTML) loadRoster(true); }, 60000);
+  try { if (window.INTRO) INTRO.maybe(); } catch (e) {}
 }
 async function loadRoster(quiet) {
   try {
@@ -1205,6 +1240,100 @@ setInterval(() => {
   }
 }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('p1.device') && !$('#kiosk').classList.contains('hidden')) loadRoster(true); });
+
+/* =====================================================================
+   Daily welcome intro (approved Oct 29). Plays once per device per day,
+   on the first open of the kiosk after 5 AM. The app loads underneath; a
+   tap skips it and never reaches the tiles; it never plays over an open
+   punch, on the Setup or Office screens, or with reduced motion.
+   ===================================================================== */
+var INTRO = { maybe(){}, play(){} };
+try { INTRO = (function(){
+  const el = document.getElementById('p1intro'); if (!el) return { maybe(){} };
+  const svg = el.querySelector('svg');
+  const edge = svg.querySelector('.p1i-edge'), metal = svg.querySelector('.p1i-metal'), sheen = svg.querySelector('.p1i-sheen'),
+        solid = svg.querySelector('.p1i-solid'), g = svg.querySelector('.p1i-push-g'),
+        wf = svg.querySelectorAll('.p1i-wfill path'), ws = svg.querySelectorAll('.p1i-wsolid path');
+  const LCX = [242.3, 321.7, 370.9, 431.5, 512.5, 640.2, 731.5, 809.4], CX = 523, CY = 567, VBW = 1472;
+  const PACE = .7, END = 4.6, LINE0 = .05, LINE1 = 1.7, FILL0 = 1.45, FILL1 = 2.55, SOLID0 = 3.35, SOLID1 = 4.35;
+  const W0 = 2.25, WS = .075, WD = .65, WT = 1.2;
+  const clamp = x => x < 0 ? 0 : x > 1 ? 1 : x, seg = (t, a, b) => clamp((t - a) / (b - a)), lerp = (a, b, t) => a + (b - a) * t;
+  const ioS = t => -(Math.cos(Math.PI * t) - 1) / 2, ioC = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  let brushed = false;
+  function brush() {   // brushed-metal streaks, drawn once on first play (no download)
+    if (brushed) return; brushed = true;
+    try {
+      const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
+      x.fillStyle = 'rgb(128,128,128)'; x.fillRect(0, 0, 512, 512);
+      let r = 1234567; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 2600; i++) { const y = rnd() * 512, l = 60 + rnd() * 420, s = rnd() * 512, a = .025 + rnd() * .07, w = rnd() < .5, hh = .6 + rnd() * .9;
+        x.fillStyle = (w ? 'rgba(255,255,255,' : 'rgba(0,0,0,') + a + ')'; x.fillRect(s, y, l, hh); x.fillRect(s - 512, y, l, hh); }
+      svg.querySelector('.p1i-brushimg').setAttribute('href', c.toDataURL('image/png'));
+    } catch (e) {}
+  }
+  let u = 1;
+  function render(t) {
+    const sc = lerp(.965, 1, ioC(seg(t, 0, 4.5)));
+    g.setAttribute('transform', 'translate(' + CX + ' ' + CY + ') scale(' + sc.toFixed(5) + ') translate(' + (-CX) + ' ' + (-CY) + ')');
+    const x = 500 * ioS(seg(t, LINE0, LINE1)), eo = lerp(1, 0, ioS(seg(t, FILL0 + .3, SOLID1)));
+    edge.setAttribute('stroke-dasharray', (2 * x).toFixed(2) + ' ' + (1000 - 2 * x).toFixed(2)); edge.setAttribute('stroke-dashoffset', x.toFixed(2));
+    edge.setAttribute('stroke-width', u.toFixed(2)); edge.setAttribute('stroke-opacity', eo.toFixed(3)); edge.style.display = eo < .002 ? 'none' : '';
+    const mt = ioS(seg(t, FILL0, FILL1)), sd = ioS(seg(t, SOLID0, SOLID1));
+    metal.setAttribute('opacity', (sd >= .999 ? 0 : mt).toFixed(3)); solid.setAttribute('opacity', sd.toFixed(3));
+    const k = ioC(seg(t, FILL0 + .15, 3.6));
+    sheen.setAttribute('transform', 'translate(' + lerp(0, 1100, k).toFixed(1) + ' 0) skewX(-24)'); sheen.setAttribute('opacity', Math.sin(Math.PI * k).toFixed(3));
+    const tr = .05 * (1 - ioC(seg(t, W0, W0 + WT)));
+    for (let i = 0; i < wf.length; i++) {
+      const o = ioS(seg(t, W0 + i * WS, W0 + i * WS + WD)), tx = 'translate(' + ((LCX[i] - CX) * tr).toFixed(2) + ' 0)';
+      wf[i].setAttribute('opacity', (sd >= .999 ? 0 : o).toFixed(3)); wf[i].setAttribute('transform', tx);
+      ws[i].setAttribute('opacity', (o * sd).toFixed(3)); ws[i].setAttribute('transform', tx);
+    }
+  }
+  let raf = 0, playing = false, guardUntil = 0;
+  // After a tap-skip the overlay keeps catching touches through its fade, and any click the browser
+  // still synthesizes from that tap (iOS/Android fire it after touchend) is dropped for a moment.
+  document.addEventListener('click', e => { if (Date.now() < guardUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
+  function close(byTap) {
+    cancelAnimationFrame(raf); raf = 0; playing = false;
+    try { render(END); } catch (e) {}
+    if (byTap) { guardUntil = Date.now() + 900; el.classList.add('held'); }
+    el.classList.add('out'); setTimeout(() => { el.hidden = true; el.classList.remove('out', 'live', 'held'); }, 650);
+  }
+  function play() {
+    // portrait phones: frame the logo tighter so it isn't tiny; landscape iPads keep the full stage
+    svg.setAttribute('viewBox', innerWidth < innerHeight ? '61 49 924 1036' : '-213 107 1472 920');
+    brush(); playing = true; el.hidden = false; el.classList.remove('out', 'held'); el.classList.add('live');
+    u = svg.viewBox.baseVal.width / (svg.getBoundingClientRect().width || VBW);   // one layout read, not per frame
+    let t0 = 0;
+    const tick = now => {
+      try {
+        if (!t0) t0 = now; const t = (now - t0) / 1000 * PACE;
+        if (t >= END) { render(END); raf = 0; setTimeout(() => { if (playing) close(); }, 500); return; }
+        render(t); raf = requestAnimationFrame(tick);
+      } catch (e) { close(); }
+    };
+    try { render(0); } catch (e) { close(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+  // A tap skips; it is swallowed so it never lands on an employee tile underneath.
+  el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (playing) close(true); });
+  el.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); });
+  function today() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  return {
+    maybe() {
+      if (playing || document.hidden) return;
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if ($('#kiosk').classList.contains('hidden')) return;     // kiosk only: not Setup or Office
+      if (new Date().getHours() < 5) return;                     // not for the 3 AM self-update
+      if (store.get('p1.introDay') === today()) return;          // once per device per day
+      if ($('#layer').innerHTML) return;                          // never over an open punch
+      store.set('p1.introDay', today());
+      try { play(); } catch (e) { el.hidden = true; playing = false; }
+    },
+    play                                                          // for testing: INTRO.play()
+  };
+})(); } catch (e) { try { document.getElementById('p1intro').hidden = true; } catch (_) {} }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) try { INTRO.maybe(); } catch (e) {} });
 
 /* =====================================================================
    boot
