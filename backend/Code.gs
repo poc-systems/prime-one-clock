@@ -43,6 +43,15 @@ const PIN_LEN = 6;
 const SLOW_AFTER = 5, SLOW_SECONDS = 30, LOCK_AFTER = 10;
 const SETUP_TRIES = 8, SETUP_WINDOW_SEC = 900;   // wrong setup codes per iPad per 15 minutes
 const PUNCH_TOKEN_MIN = 3;
+const PIN_ROUNDS = 100;           // HMAC rounds per PIN check (slows offline cracking of a leaked sheet)
+const DEVICE_CODE_FAILS = 20;     // wrong iPad codes per hour (all devices) before iPad setup turns off
+const SETUP_FAILS_GLOBAL = 30;    // wrong PIN setup codes per hour (all iPads) before an email alert
+const UNKNOWN_PHONE_TRIES = 10;   // unknown cell numbers per iPad per 15 minutes
+const OFFLINE_TRUST_MIN = 15;     // an offline punch sent within this many minutes keeps its time unflagged
+/** Shown on the iPads wherever people are told to text Juliana. Set Juliana's cell here, e.g. '(919) 555-0100'. */
+const HELP_PHONE = '';
+/** Final answers: an offline punch refused with one of these is dropped and reported. Anything else is retried. */
+const FINAL_ERRORS = /^(PIN_NOT_SET|PIN_LOCKED|PIN_WAIT|NOT_ON_FILE|Wrong PIN|Enter your|This phone is set up|You.re not set up to clock in|Tap your own name)/;
 const OPEN_SHIFT_HOURS = 16;      // an IN older than this with no OUT is a missed clock-out
 const GRACE_MIN = 5;              // minutes before someone counts as late / left early
 const CODE_HOURS = 48;            // device setup codes expire after this
@@ -72,7 +81,8 @@ function doPost(e) {
     b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     return json_(Object.assign({ ok: true, appVersion: APP_VERSION, serverMs: Date.now() }, route_(b)));
   } catch (err) {
-    return json_({ ok: false, appVersion: APP_VERSION, serverMs: Date.now(), error: String((err && err.message) || err) });
+    const msg = String((err && err.message) || err);
+    return json_({ ok: false, appVersion: APP_VERSION, serverMs: Date.now(), error: msg, final: FINAL_ERRORS.test(msg) || msg === 'DEVICE_NOT_SET_UP' });
   }
 }
 
@@ -81,9 +91,10 @@ function route_(b) {
   switch (b.action) {
     case 'ping': return { time: now_() };
     case 'setupDevice': return setupDevice_(b.code, b.name);
-    case 'roster': return roster_(device_(b.device));
-    case 'clock': return clock_(device_(b.device), b);
-    case 'setPin': return setPin_(device_(b.device), b);
+    case 'roster': { const d = device_(b.device); noteOnline_(d); return roster_(d); }
+    case 'clock': { const d = device_(b.device); if (!b.queued) noteOnline_(d); return clock_(d, b); }
+    case 'checkCode': { const d = device_(b.device); noteOnline_(d); return checkCode_(d, b); }
+    case 'setPin': { const d = device_(b.device); noteOnline_(d); return setPin_(d, b); }
     case 'undo': return undo_(device_(b.device), b.ticket, b.punchId);
     default: throw new Error('Unknown action.');
   }
@@ -104,7 +115,7 @@ function newDeviceCode_(who, storeId, name, employeeId) {
     if (!person) throw new Error('Choose the person this phone belongs to.');
   }
   return withLock_(() => {
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code = rand6_();
     const id = nextId_(IDS.CLOCK, 'Devices', 'Device ID', 'DEV-', 4);
     appendRow_(IDS.CLOCK, 'Devices', {
       'Device ID': id, 'Store ID': storeId, 'Device Name': text_(name, 60) || (person ? person.name + ' phone' : store.name + ' iPad'),
@@ -118,13 +129,28 @@ function newDeviceCode_(who, storeId, name, employeeId) {
 
 function setupDevice_(code, name) {
   const c = String(code || '').replace(/\D/g, '');
-  if (c.length !== 6) throw new Error('Enter the 6-digit setup code.');
+  if (c.length !== 6) throw new Error('Enter the 6-digit iPad code.');
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('DEVICE_SETUP_OFF') === '1') throw new Error('iPad setup is paused. Text Andre or Juliana to turn it back on.');
+  // Look for the code without the lock, so wrong guesses never slow down real punches.
+  const rows = readTable_(IDS.CLOCK, 'Devices');
+  const ok = rows.some(r => String(r['Setup Code']) === c && r['Status'] === 'Waiting for setup' && asTime_(r['Code Expires']) > Date.now());
+  if (!ok) {
+    withLock_(() => {
+      const fails = bumpWindow_('DEVFAIL', 3600);
+      if (fails === DEVICE_CODE_FAILS) {
+        props.setProperty('DEVICE_SETUP_OFF', '1');
+        accessLog_('', '', 'device setup', '', 'Paused after ' + fails + ' wrong codes in an hour', '');
+        alert_('Prime One Clock: iPad setup paused', fails + ' wrong iPad codes were tried in one hour, so new iPad setup is paused. If that was you setting up iPads, turn it back on in Prime One Clock Office › Devices. If not, someone is guessing codes.');
+      } else if (fails < DEVICE_CODE_FAILS) accessLog_('', '', 'device setup', '', 'Bad code', '');
+    });
+    throw new Error('That code is not valid, or it expired. Ask the office for a new one.');
+  }
   return withLock_(() => {
-    const rows = readTable_(IDS.CLOCK, 'Devices');
-    const i = rows.findIndex(r => String(r['Setup Code']) === c && r['Status'] === 'Waiting for setup');
-    if (i === -1) { accessLog_('', '', 'device setup', '', 'Bad code', ''); throw new Error('That code is not valid. Ask the office for a new one.'); }
+    const rows = readTable_(IDS.CLOCK, 'Devices', true);
+    const i = rows.findIndex(r => String(r['Setup Code']) === c && r['Status'] === 'Waiting for setup' && asTime_(r['Code Expires']) > Date.now());
+    if (i === -1) throw new Error('That code is not valid, or it expired. Ask the office for a new one.');
     const r = rows[i];
-    if (asTime_(r['Code Expires']) < Date.now()) throw new Error('That code expired. Ask the office for a new one.');
     const token = Utilities.getUuid() + Utilities.getUuid();
     setCell_(IDS.CLOCK, 'Devices', i, 'Token Hash', hash_('dev', token));
     setCell_(IDS.CLOCK, 'Devices', i, 'Setup Code', '');
@@ -134,6 +160,14 @@ function setupDevice_(code, name) {
     accessLog_(r['Device ID'], r['Store ID'], 'device setup', '', 'OK', '');
     return { device: r['Device ID'] + '.' + token, deviceId: r['Device ID'], storeId: r['Store ID'], storeName: storeName_(r['Store ID']) };
   });
+}
+
+/** The last time this device talked to the server while online (used to judge "offline" punches). */
+function noteOnline_(dev) {
+  try {
+    const props = PropertiesService.getScriptProperties(), k = 'ON_' + dev.id;
+    if (Date.now() - Number(props.getProperty(k) || 0) > 60000) props.setProperty(k, String(Date.now()));
+  } catch (e) {}
 }
 
 /** Device token is "DEV-0001.<secret>". Every kiosk call carries it; a revoked device stops at once. */
@@ -187,7 +221,7 @@ function roster_(dev) {
       elsewhere: st.status === 'in' && st.storeId && st.storeId !== dev.storeId ? storeName_(st.storeId) : ''
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
-  return { storeId: dev.storeId, storeName: dev.storeName, deviceId: dev.id, serverTime: now_(), personal: !!dev.employeeId, people: people };
+  return { storeId: dev.storeId, storeName: dev.storeName, deviceId: dev.id, serverTime: now_(), personal: !!dev.employeeId, helpPhone: HELP_PHONE, people: people };
 }
 
 function readTicket_(dev, ticket) {
@@ -199,88 +233,154 @@ function readTicket_(dev, ticket) {
 /**
  * One step at the kiosk: PIN + photo in, punch saved. The server decides IN or OUT from the
  * person's last punch. Every reply carries the store's fresh list, so the iPad never polls.
+ * An offline punch (queued) that is refused for a final reason is logged on the Refused tab.
  */
 function clock_(dev, b) {
   const pin = String(b.pin || '');
   if (!new RegExp('^\\d{' + PIN_LEN + '}$').test(pin)) throw new Error('Enter your ' + PIN_LEN + '-digit PIN.');
-  const cid = b.cid ? String(b.cid).slice(0, 60) : '';
-  // Retries of the same punch (offline queue) return the first result instead of punching twice.
-  const cache = CacheService.getScriptCache(), cidKey = cid ? 'cid_' + cid : '';
-  if (cidKey) { const seen = cache.get(cidKey); if (seen) return JSON.parse(seen); }
-  const out = withLock_(() => {
-    if (cid && b.queued) {
-      const dup = recentRows_(3000).find(x => String(x['Client ID']) === cid);
-      if (dup) return { duplicate: true, punchId: dup['Punch ID'], type: dup['Type'], time: hm_(str_(dup['Punch Time'])), name: String(dup['Employee Name']).split(' ')[0] };
+  const cid = String(b.cid || '');
+  if (cid && !/^[a-z0-9]{8,40}$/.test(cid)) throw new Error('Enter your PIN again.');
+  return withLock_(() => {
+    // The same punch sent twice (slow answer + saved copy, or a resend after a reload) counts once.
+    if (cid) {
+      const cache = CacheService.getScriptCache(), seen = cache.get('cid_' + cid);
+      if (seen) { const o = JSON.parse(seen); if (o.dev === dev.id) return o.r; }
+      const dup = recentRows_(600).find(x => String(x['Client ID']) === cid);
+      if (dup) return { duplicate: true, punchId: dup['Punch ID'], type: dup['Type'], time: hm_(str_(dup['Punch Time'])), name: String(dup['Employee Name']).split(' ')[0], roster: roster_(dev) };
     }
-    const p = findPerson_(dev, b.employeeId, b.phone);
-    if (dev.employeeId && p.id !== dev.employeeId) throw new Error('This phone is set up for someone else.');
-    if (!p.clocksIn) throw new Error(p.name + ' is not set up to clock in. Text Juliana.');
-    checkPin_(p, pin, dev);
-    const first = p.first || p.name.split(' ')[0];
-    let st = stateOf_(lastPunches_()[p.id]);
-    const when = punchTime_(b);
-    const notes = [];
-    if (when.note) notes.push(when.note);
+    let p;
+    try {
+      p = findPerson_(dev, b.employeeId, b.phone);
+      if (!p.clocksIn) throw new Error('You’re not set up to clock in. Text Juliana.');
+      checkPin_(p, pin, dev);
+    } catch (e) {
+      if (b.queued && FINAL_ERRORS.test(String(e.message))) logRefused_(dev, p, b, e.message);
+      throw e;
+    }
+    const r = punchNow_(dev, p, b, cid);
+    if (cid && !r.confirm && !r.switchStore) { try { CacheService.getScriptCache().put('cid_' + cid, JSON.stringify({ dev: dev.id, r: r }), 21600); } catch (e) {} }
+    return r;
+  });
+}
 
-    // Still clocked in at another store: one tap closes that and opens this one.
-    if (st.status === 'in' && st.storeId && st.storeId !== dev.storeId && !dev.employeeId) {
-      if (!b.switchStore && !b.queued) return { switchStore: true, name: first, otherStore: storeName_(st.storeId), sinceLabel: st.sinceLabel };
-      doPunch_({ id: dev.id, storeId: st.storeId }, p, 'OUT', '', st, when.at,
-        notes.concat(['Clocked out by clocking in at ' + dev.storeName + '.']).join(' '), cid ? cid + '-out' : '');
+function punchNow_(dev, p, b, cid) {
+  const first = p.first || p.name.split(' ')[0];
+  const last = lastPunches_()[p.id];
+  const when = punchTime_(dev, b, last);
+  const at = when.at || new Date();
+  const notes = when.note ? [when.note] : [];
+  let st = stateOf_(last, at.getTime());
+
+  // Still clocked in at another store: one tap closes that and opens this one.
+  // Offline: only if the other store's clock-in came before this punch; otherwise it's flagged.
+  if (st.status === 'in' && st.storeId && st.storeId !== dev.storeId && !dev.employeeId) {
+    if (!b.queued && !b.switchStore) return { switchStore: true, name: first, otherStore: storeName_(st.storeId), sinceLabel: st.sinceLabel };
+    if (!when.outOfOrder) {
+      doPunch_({ id: dev.id, storeId: st.storeId }, p, 'OUT', '', st, at,
+        notes.concat(['Clocked out by clocking in at ' + dev.storeName + '.']).join(' '), cid ? cid + 'x' : '');
       st = { status: 'out', since: '', sinceLabel: '', openSince: '', storeId: '' };
     }
+  }
 
-    const type = st.status === 'in' ? 'OUT' : 'IN';
-    if (type === 'OUT' && !b.confirm && !b.queued && Date.now() - asTime_(st.since) < CONFIRM_OUT_MIN * 60000) {
-      return { confirm: true, name: first, sinceLabel: st.sinceLabel };
-    }
-    if (type === 'IN' && st.openSince) notes.push('Previous clock-in ' + st.openSince + ' has no clock-out.');
-    if (!dev.employeeId && p.storeId !== dev.storeId) recordVisit_(p, dev, when.at || new Date());
-    const r = doPunch_(dev, p, type, b.photo, st, when.at, notes.join(' '), cid);
-    return Object.assign(r, {
-      ticket: makeToken_('T', p.id + ':' + dev.id, PUNCH_TOKEN_MIN), employeeId: p.id, fullName: p.name,
-      hoursToday: type === 'OUT' ? hoursToday_(p.id) : null,
-      visiting: !dev.employeeId && p.storeId !== dev.storeId,
-      roster: roster_(dev)
-    });
+  let type = st.status === 'in' ? 'OUT' : 'IN';
+  if (when.outOfOrder) {
+    // Sent after a newer punch already arrived: keep what the iPad showed, and ask Juliana to check.
+    if (b.guess === 'IN' || b.guess === 'OUT') type = b.guess;
+    notes.push('REVIEW: arrived after a newer punch; check the order of this day.');
+  } else if (b.queued && (b.guess === 'IN' || b.guess === 'OUT') && b.guess !== type) {
+    notes.push('REVIEW: the iPad showed ' + (b.guess === 'IN' ? 'clock in' : 'clock out') + '.');
+  }
+  if (type === 'OUT' && !b.confirm && !b.queued && Date.now() - asTime_(st.since) < CONFIRM_OUT_MIN * 60000) {
+    return { confirm: true, name: first, sinceLabel: st.sinceLabel };
+  }
+  if (type === 'IN' && st.openSince) notes.push('Previous clock-in ' + st.openSince + ' has no clock-out.');
+  if (!dev.employeeId && p.storeId !== dev.storeId) recordVisit_(p, dev, at);
+  const r = doPunch_(dev, p, type, b.photo, st, at, notes.join(' '), cid);
+  return Object.assign(r, {
+    ticket: makeToken_('T', p.id + ':' + dev.id, PUNCH_TOKEN_MIN), employeeId: p.id, fullName: p.name,
+    hoursToday: type === 'OUT' ? hoursToday_(p.id) : null,
+    visiting: !dev.employeeId && p.storeId !== dev.storeId,
+    roster: roster_(dev)
   });
-  if (cidKey && out && !out.confirm && !out.switchStore) { try { cache.put(cidKey, JSON.stringify(out), 21600); } catch (e) {} }
-  return out;
 }
 
 /**
- * When the punch happened. Online: the server's clock, always. Offline: the time the iPad recorded.
- * "anchored" means the iPad measured it from its last server sync with a stopwatch that changing the
- * iPad's clock does not affect. Anything else is marked REVIEW for Juliana.
+ * When the punch happened. Online: the server's clock, always. Offline (queued): the time the iPad
+ * recorded, but marked REVIEW for Juliana when any of these is true —
+ *  - it was made on a personal phone (that phone's owner controls it);
+ *  - it arrived more than 15 minutes after it was made;
+ *  - the iPad wasn't really offline (it talked to the server online after that time);
+ *  - the iPad's stopwatch and clock disagreed ("device" time).
+ * A punch older than the person's newest punch is "out of order" and never moves their state.
  */
-function punchTime_(b) {
-  if (!b.queued) return { at: null, note: '', review: false };
+function punchTime_(dev, b, last) {
+  if (!b.queued) return { at: null, note: '' };
   const t = Number(b.at), now = Date.now();
   if (!t || t > now + 60000 || t < now - OFFLINE_MAX_DAYS * 86400000) {
-    return { at: null, note: 'REVIEW: made offline, time out of range; recorded when received ' + now_() + '.', review: true };
+    return { at: null, note: 'REVIEW: made offline, time out of range; recorded when received ' + now_() + '.' };
   }
-  const anchored = b.timeSource === 'anchored';
+  const at = new Date(Math.min(t, now));
+  const why = [];
+  if (b.timeSource !== 'anchored') why.push('time is from the iPad clock and could not be checked');
+  if (dev.employeeId) why.push('made on a personal phone');
+  if (now - at.getTime() > OFFLINE_TRUST_MIN * 60000) why.push('sent ' + dur_((now - at.getTime()) / 60000) + ' after it was made');
+  const online = Number(PropertiesService.getScriptProperties().getProperty('ON_' + dev.id) || 0);
+  if (online && online > at.getTime() + 60000) why.push('this device was online after that time');
+  const outOfOrder = !!last && at.getTime() < asTime_(last['Punch Time']);
   return {
-    at: new Date(Math.min(t, now)),
-    note: 'Made offline; sent ' + now_() + '.' + (anchored ? '' : ' REVIEW: time is from the iPad clock and could not be checked.'),
-    review: !anchored
+    at: at, outOfOrder: outOfOrder,
+    note: 'Made offline; sent ' + now_() + '.' + (why.length ? ' REVIEW: ' + why.join('; ') + '.' : '')
   };
 }
 
+/**
+ * The person punching. A tapped name must be on this iPad's list (its store, or here today);
+ * anyone else uses their cell number. One answer for every miss, so numbers can't be tested.
+ */
 function findPerson_(dev, employeeId, phone) {
   const everyone = clockPeople_(true);
   let p;
-  if (employeeId) p = everyone.find(x => x.id === employeeId);
-  else {
-    const d = digits_(phone);
-    if (d.length !== 10) throw new Error('Enter your 10-digit cell number.');
-    p = everyone.find(x => digits_(x.phone) === d);
+  if (employeeId) {
+    p = everyone.find(x => x.id === employeeId);
+    if (p && dev.employeeId && p.id !== dev.employeeId) throw new Error('This phone is set up for someone else.');
+    if (p && !dev.employeeId && p.storeId !== dev.storeId && !visitingToday_(p.id, dev.storeId)) p = null;
+    if (!p) throw new Error('Tap your own name, or use “Not on the list?”.');
+    return p;
   }
-  if (!p) {
-    accessLog_(dev.id, dev.storeId, 'sign in', employeeId || '', employeeId ? 'Unknown person' : 'Unknown phone', '');
-    throw new Error(employeeId ? 'PIN not recognized.' : 'That cell number is not on file. Text Juliana.');
+  const d = digits_(phone);
+  if (d.length !== 10) throw new Error('Enter your 10-digit cell number.');
+  const k = 'UNK_' + dev.id;
+  if (windowCount_(k) >= UNKNOWN_PHONE_TRIES) throw new Error('NOT_ON_FILE');
+  p = everyone.find(x => digits_(x.phone) === d);
+  if (!p || (dev.employeeId && p.id !== dev.employeeId)) {
+    bumpWindow_(k, 900);
+    accessLog_(dev.id, dev.storeId, 'sign in', '', 'Unknown phone', d.slice(-4));
+    throw new Error('NOT_ON_FILE');
   }
   return p;
+}
+function visitingToday_(empId, storeId) {
+  const t = today_();
+  return readTable_(IDS.CLOCK, 'Visits').some(v => asDay_(v['Date']) === t && v['Employee ID'] === empId && v['Store ID'] === storeId);
+}
+
+/** A punch saved offline that was refused (wrong PIN, locked…). Juliana sees it on Today. */
+function logRefused_(dev, p, b, why) {
+  try {
+    appendRow_(IDS.CLOCK, 'Refused', {
+      'Refused At': now_(), 'Made At': Number(b.at) ? stamp_(new Date(Number(b.at))) : '', 'Store ID': dev.storeId, 'Device ID': dev.id,
+      'Employee ID': p ? p.id : '', 'Employee Name': p ? p.name : '', 'Cell (last 4)': p ? '' : digits_(b.phone).slice(-4),
+      'Showed As': b.guess || '', 'Reason': plainReason_(why), 'Status': 'Open', 'Handled By': ''
+    });
+  } catch (e) {}
+}
+function plainReason_(m) {
+  m = String(m || '');
+  if (/^PIN_NOT_SET/.test(m)) return 'No PIN set up yet';
+  if (/^PIN_LOCKED/.test(m)) return 'PIN locked';
+  if (/^PIN_WAIT|^Wrong PIN/.test(m)) return 'Wrong PIN';
+  if (/^NOT_ON_FILE/.test(m)) return 'Cell number not on file';
+  return m.slice(0, 120);
 }
 
 /** One row per person, per store, per day they worked away from their own store. */
@@ -303,8 +403,12 @@ function undo_(dev, ticket, punchId) {
     if (!pu || pu['Employee ID'] !== empId || pu['Source'] !== 'Kiosk' || pu['Status'] !== 'Active') throw new Error('That punch cannot be undone here.');
     if (Date.now() - asTime_(pu['Recorded At']) > 2 * 60000) throw new Error('Too late to undo. Text Juliana.');
     const p = clockPeople_(true).find(x => x.id === empId) || { name: empId };
-    voidPunchCore_({ name: p.name + ' (undo at kiosk)' }, punchId, 'Undone at the kiosk right after punching', '');
-    rebuildState_();
+    const by = { name: p.name + ' (undo at kiosk)' };
+    voidPunchCore_(by, punchId, 'Undone at the kiosk right after punching', '');
+    const cid = String(pu['Client ID'] || '');
+    const partner = cid ? rows.find(x => String(x['Client ID']) === cid + 'x' && x['Status'] === 'Active') : null;
+    if (partner) voidPunchCore_(by, partner['Punch ID'], 'Undone at the kiosk (automatic clock-out when switching stores)', '');
+    rebuildOne_(empId);
     return { message: 'Undone.', roster: roster_(dev) };
   });
 }
@@ -364,7 +468,19 @@ function credId_() {
   if (!id) throw new Error('The clock is not finished setting up. Text Andre.');
   return id;
 }
-function pinHash_(salt, pin) { return sha_('pin:' + salt + ':' + pin + ':' + secret_()); }
+function pinPepper_() {
+  const props = PropertiesService.getScriptProperties();
+  let s = props.getProperty('PIN_PEPPER');
+  if (!s) { s = Utilities.getUuid() + Utilities.getUuid(); props.setProperty('PIN_PEPPER', s); }
+  return s;
+}
+/** Iterated HMAC with a pepper kept only in this script's settings (never in the sheet). */
+function pinHash_(salt, pin) {
+  const key = pinPepper_();
+  let h = 'pin:' + salt + ':' + pin;
+  for (let i = 0; i < PIN_ROUNDS; i++) h = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(h, key));
+  return h;
+}
 
 /** { 'PO-0047': 'set' | 'locked' } — anyone missing has not set a PIN yet. */
 function credStates_() {
@@ -388,8 +504,10 @@ function checkPin_(p, pin, dev) {
   const r = rows[i];
   if (r['Locked'] === 'Yes') throw new Error('PIN_LOCKED');
   let tries = Number(r['Failed Tries'] || 0);
-  if (tries >= SLOW_AFTER && Date.now() - asTime_(r['Last Fail']) < SLOW_SECONDS * 1000) {
-    throw new Error('Too many wrong PINs. Wait ' + SLOW_SECONDS + ' seconds, then try again.');
+  const lastFail = asTime_(r['Last Fail']);
+  if (tries && Date.now() - lastFail > 86400000) tries = 0;           // old typos don't add up over weeks
+  if (tries >= SLOW_AFTER && Date.now() - lastFail < SLOW_SECONDS * 1000) {
+    throw new Error('PIN_WAIT:' + Math.ceil((SLOW_SECONDS * 1000 - (Date.now() - lastFail)) / 1000) + ':' + (LOCK_AFTER - tries));
   }
   if (r['PIN Hash'] !== pinHash_(String(r['Salt']), pin)) {
     tries++;
@@ -402,24 +520,20 @@ function checkPin_(p, pin, dev) {
       alertLocked_(p, dev);
       throw new Error('PIN_LOCKED');
     }
-    const left = LOCK_AFTER - tries;
-    throw new Error(tries >= SLOW_AFTER
-      ? 'Wrong PIN. ' + left + (left === 1 ? ' try' : ' tries') + ' left before it locks. Wait ' + SLOW_SECONDS + ' seconds.'
-      : 'Wrong PIN. Try again.');
+    if (tries >= SLOW_AFTER) throw new Error('PIN_WAIT:' + SLOW_SECONDS + ':' + (LOCK_AFTER - tries));
+    throw new Error('Wrong PIN. Check that you tapped your own name, then try again.');
   }
-  if (tries) setCell_(cid, 'PINs', i, 'Failed Tries', 0);
+  if (tries || r['Failed Tries']) setCell_(cid, 'PINs', i, 'Failed Tries', 0);
   setCell_(cid, 'PINs', i, 'Last Used', now_());
 }
 
 function alertLocked_(p, dev) {
-  try {
-    MailApp.sendEmail({
-      to: ALERT_EMAILS.join(','),
-      subject: 'Prime One Clock: ' + p.name + "'s PIN is locked",
-      body: p.name + ' entered a wrong PIN 10 times' + (dev ? ' at ' + dev.storeName : '') + ' (' + now_() + ').\n\n' +
-        'They cannot clock in until it is unlocked. Open Prime One Clock Office › People, then Unlock (same PIN) or Reset PIN (they choose a new one with the setup code).'
-    });
-  } catch (e) { /* email never blocks the clock */ }
+  alert_('Prime One Clock: ' + p.name + '’s PIN is locked',
+    p.name + ' entered a wrong PIN 10 times' + (dev ? ' at ' + dev.storeName : '') + ' (' + now_() + ').\n\n' +
+    'They can’t clock in until it’s unlocked. Open Prime One Clock Office › Today, then Unlock (same PIN) or Reset PIN (you get a one-time code to text them).');
+}
+function alert_(subject, body) {
+  try { MailApp.sendEmail({ to: ALERT_EMAILS.join(','), subject: subject, body: body }); } catch (e) { /* email never blocks the clock */ }
 }
 
 /** The shared code people use the first time, to choose their own PIN. */
@@ -431,7 +545,7 @@ function setupCode_() {
 }
 function newSetupCodeValue_() {
   let c;
-  do { c = String(Math.floor(100000 + Math.random() * 900000)); } while (weakPin_(c, ''));
+  do { c = rand6_(); } while (weakPin_(c, ''));
   return c;
 }
 
@@ -448,36 +562,61 @@ function weakPin_(pin, phone) {
 }
 
 /**
- * First sign-in (or after the office resets a PIN): the setup code, then the person's own PIN.
+ * Which code this person needs: the shared setup code the first time, or the one-time reset code
+ * Juliana got when she reset their PIN. Wrong codes are counted per iPad and across all iPads.
+ */
+function codeCheck_(dev, p, code) {
+  const k = 'SC_' + dev.id;
+  if (windowCount_(k) >= SETUP_TRIES) throw new Error('Too many wrong codes on this iPad. Wait 15 minutes, or text Juliana' + helpSuffix_() + '.');
+  const cid = credId_(), rows = readTable_(cid, 'PINs');
+  const i = rows.findIndex(r => r['Employee ID'] === p.id);
+  const row = i === -1 ? null : rows[i];
+  if (row && row['Status'] === 'Active') throw new Error('You already have a PIN. If you forgot it, text Juliana' + helpSuffix_() + ' to reset it.');
+  const isReset = row && /^Reset/.test(String(row['Status']));
+  let good;
+  if (isReset) good = String(row['Reset Code']) === hash_('reset', p.id + ':' + code) && asTime_(row['Reset Expires']) > Date.now();
+  else good = String(code || '') === setupCode_();
+  if (!good) {
+    bumpWindow_(k, SETUP_WINDOW_SEC);
+    const all = bumpWindow_('SCALL', 3600);
+    if (all === SETUP_FAILS_GLOBAL) alert_('Prime One Clock: many wrong setup codes', all + ' wrong PIN setup codes were entered in the last hour across the store iPads. If that wasn’t a busy setup day, change the setup code in Office › People & PINs.');
+    accessLog_(dev.id, dev.storeId, 'pin setup', p.id, 'Wrong code', '');
+    throw new Error(isReset ? 'That code is not right. Use the code Juliana texted you, or text her' + helpSuffix_() + ' for a new one.' : 'That setup code is not right. Ask your manager, or text Juliana' + helpSuffix_() + '.');
+  }
+  return { i: i, isReset: isReset };
+}
+function helpSuffix_() { return HELP_PHONE ? ' at ' + HELP_PHONE : ''; }
+
+/** Step 1 of first sign-in: is the code right? (So nobody picks a PIN twice for nothing.) */
+function checkCode_(dev, b) {
+  return withLock_(() => {
+    const p = findPerson_(dev, b.employeeId, b.phone);
+    const c = codeCheck_(dev, p, String(b.setupCode || ''));
+    return { ok: true, reset: c.isReset, name: p.first || p.name.split(' ')[0] };
+  });
+}
+
+/**
+ * First sign-in (or after the office resets a PIN): the code, then the person's own PIN.
  * The iPad then clocks them in with the new PIN.
  */
 function setPin_(dev, b) {
-  const p = findPerson_(dev, b.employeeId, b.phone);
-  if (dev.employeeId && p.id !== dev.employeeId) throw new Error('This phone is set up for someone else.');
-  const cache = CacheService.getScriptCache(), key = 'sc_' + dev.id;
-  const n = Number(cache.get(key) || 0);
-  if (n >= SETUP_TRIES) throw new Error('Too many wrong setup codes on this iPad. Wait 15 minutes, or text Juliana.');
-  if (String(b.setupCode || '') !== setupCode_()) {
-    cache.put(key, String(n + 1), SETUP_WINDOW_SEC);
-    accessLog_(dev.id, dev.storeId, 'pin setup', p.id, 'Wrong setup code', '');
-    throw new Error('That setup code is not right. Ask your manager, or text Juliana.');
-  }
   const pin = String(b.newPin || '');
   if (!new RegExp('^\\d{' + PIN_LEN + '}$').test(pin)) throw new Error('Your PIN must be ' + PIN_LEN + ' digits.');
-  const weak = weakPin_(pin, p.phone);
-  if (weak) throw new Error(weak);
   return withLock_(() => {
+    const p = findPerson_(dev, b.employeeId, b.phone);
+    const c = codeCheck_(dev, p, String(b.setupCode || ''));
+    const weak = weakPin_(pin, p.phone);
+    if (weak) throw new Error(weak);
     const cid = credId_();
-    const rows = readTable_(cid, 'PINs');
-    const i = rows.findIndex(r => r['Employee ID'] === p.id);
-    if (i !== -1 && rows[i]['Status'] === 'Active') throw new Error('You already have a PIN. If you forgot it, text Juliana to reset it.');
     const salt = Utilities.getUuid();
     const vals = {
       'Employee ID': p.id, 'Employee Name': p.name, 'PIN Hash': pinHash_(salt, pin), 'Salt': salt, 'Status': 'Active',
-      'Set On': now_(), 'Set By': 'Self, ' + dev.storeId + ' (' + dev.id + ')', 'Failed Tries': 0, 'Last Fail': '', 'Locked': '', 'Locked At': '', 'Last Used': ''
+      'Set On': now_(), 'Set By': 'Self, ' + dev.storeId + ' (' + dev.id + ')' + (c.isReset ? ' after reset' : ''), 'Failed Tries': 0, 'Last Fail': '', 'Locked': '', 'Locked At': '', 'Last Used': '',
+      'Reset Code': '', 'Reset Expires': ''
     };
-    if (i === -1) appendRow_(cid, 'PINs', vals);
-    else Object.keys(vals).forEach(k => setCell_(cid, 'PINs', i, k, vals[k]));
+    if (c.i === -1) appendRow_(cid, 'PINs', vals);
+    else Object.keys(vals).forEach(k => setCell_(cid, 'PINs', c.i, k, vals[k]));
     accessLog_(dev.id, dev.storeId, 'pin setup', p.id, 'PIN set', '');
     return { message: 'PIN saved.' };
   });
@@ -502,9 +641,12 @@ function officeCall(action, data) {
   switch (action) {
     case 'home': { const home = officeHome_(who); return { home: home, sheet: timesheet_(who, 'ALL', home.currentWeek) }; }
     case 'timesheet': return timesheet_(who, d.storeId, d.weekStart);
-    case 'editPunch': must_(d.reason, 'Reason'); return withLock_(() => { editPunchCore_(who, d.punchId, d.time, d.type, d.reason, ''); rebuildState_(); return { message: 'Saved.' }; });
-    case 'voidPunch': must_(d.reason, 'Reason'); return withLock_(() => { voidPunchCore_(who, d.punchId, d.reason, ''); rebuildState_(); return { message: 'Removed from hours (kept in the log).' }; });
-    case 'addPunch': must_(d.reason, 'Reason'); return withLock_(() => { const id = addPunchCore_(who, d.employeeId, d.storeId, d.type, d.time, d.reason, ''); rebuildState_(); return { punchId: id, message: 'Added.' }; });
+    case 'editPunch': must_(d.reason, 'Reason'); return withLock_(() => { const e = editPunchCore_(who, d.punchId, d.time, d.type, d.reason, ''); rebuildOne_(e); return { message: 'Saved.' }; });
+    case 'okPunch': return withLock_(() => { okPunchCore_(who, d.punchId); return { message: 'Marked as checked.' }; });
+    case 'voidPunch': must_(d.reason, 'Reason'); return withLock_(() => { const e = voidPunchCore_(who, d.punchId, d.reason, ''); rebuildOne_(e); return { message: 'Removed from hours (kept in the log).' }; });
+    case 'addPunch': must_(d.reason, 'Reason'); return withLock_(() => { const id = addPunchCore_(who, d.employeeId, d.storeId, d.type, d.time, d.reason, ''); rebuildOne_(d.employeeId); return { punchId: id, message: 'Added.' }; });
+    case 'closeRefused': return withLock_(() => { closeRefused_(who, d.row); return { message: 'Done.' }; });
+    case 'deviceSetupOn': return withLock_(() => { const pr = PropertiesService.getScriptProperties(); pr.deleteProperty('DEVICE_SETUP_OFF'); pr.deleteProperty('W_DEVFAIL'); accessLog_('', '', 'device setup', who.id, 'Turned back on', ''); return { message: 'iPad setup is on again.' }; });
     case 'newDeviceCode': return newDeviceCode_(who, d.storeId, d.name, d.employeeId);
     case 'revokeDevice': return revokeDevice_(who, d.deviceId);
     case 'pins': return pinList_();
@@ -517,7 +659,6 @@ function officeCall(action, data) {
 
 function officeHome_(who) {
   return withLock_(() => {
-    rebuildState_();
     const stores = activeStores_().filter(s => s.id !== OVERHEAD_STORE);
     const devices = readTable_(IDS.CLOCK, 'Devices').filter(d => d['Status'] === 'Active' || d['Status'] === 'Waiting for setup').map(d => ({
       id: d['Device ID'], storeId: d['Store ID'], name: d['Device Name'], status: d['Status'],
@@ -528,7 +669,15 @@ function officeHome_(who) {
     const t = today_();
     const visits = readTable_(IDS.CLOCK, 'Visits').filter(v => asDay_(v['Date']) === t)
       .map(v => ({ employeeId: v['Employee ID'], name: v['Employee Name'], homeStore: v['Home Store'], storeId: v['Store ID'], first: hm_(str_(v['First Punch'])) }));
-    return { me: who.name, today: t, currentWeek: mondayOf_(t), stores: stores, devices: devices, people: people, visits: visits, setupCode: setupCode_() };
+    const refused = readTable_(IDS.CLOCK, 'Refused').map((r, i) => Object.assign({ row: i }, r)).filter(r => r['Status'] === 'Open').map(r => ({
+      row: r.row, at: str_(r['Made At']), storeId: r['Store ID'], employeeId: r['Employee ID'], name: r['Employee Name'] || ('Cell ending ' + r['Cell (last 4)']),
+      showed: r['Showed As'], reason: r['Reason']
+    }));
+    return {
+      me: who.name, today: t, currentWeek: mondayOf_(t), stores: stores, devices: devices, people: people, visits: visits,
+      setupCode: setupCode_(), refused: refused,
+      deviceSetupOff: PropertiesService.getScriptProperties().getProperty('DEVICE_SETUP_OFF') === '1'
+    };
   });
 }
 
@@ -544,25 +693,37 @@ function pinList_() {
         id: p.id, name: p.name, storeId: p.storeId,
         state: !active ? 'none' : r['Locked'] === 'Yes' ? 'locked' : 'set',
         setOn: active ? str_(r['Set On']) : '', lastUsed: active ? str_(r['Last Used']) : '',
-        tries: active ? Number(r['Failed Tries'] || 0) : 0, lockedAt: active ? str_(r['Locked At']) : ''
+        tries: active ? Number(r['Failed Tries'] || 0) : 0, lockedAt: active ? str_(r['Locked At']) : '',
+        resetPending: !!r && /^Reset/.test(String(r['Status']))
       };
     }).sort((a, b) => a.name.localeCompare(b.name))
   };
 }
 
-/** The person chooses a new PIN on any store iPad, using the setup code. */
+/**
+ * Clears the PIN and makes a one-time code for this person only (good for 3 days). They tap their
+ * name on any store iPad, enter that code, and choose a new PIN. The shared setup code won't work
+ * for them, so nobody else can take over the account after a reset.
+ */
 function resetPin_(who, empId) {
   return withLock_(() => {
     const cid = credId_(), rows = readTable_(cid, 'PINs');
-    const i = rows.findIndex(r => r['Employee ID'] === empId);
     const p = clockPeople_(true).find(x => x.id === empId);
     if (!p) throw new Error('Unknown employee.');
-    if (i === -1 || rows[i]['Status'] !== 'Active') return { message: p.name + ' has no PIN yet. They set one on any store iPad with the setup code.' };
+    const i = rows.findIndex(r => r['Employee ID'] === empId);
+    if (i === -1) return { message: (p.first || p.name) + ' has no PIN yet. They set one on any store iPad with the setup code.', code: '', text: '' };
+    const code = rand6_();
     ['PIN Hash', 'Salt', 'Last Fail', 'Locked', 'Locked At'].forEach(k => setCell_(cid, 'PINs', i, k, ''));
     setCell_(cid, 'PINs', i, 'Failed Tries', 0);
+    setCell_(cid, 'PINs', i, 'Reset Code', hash_('reset', empId + ':' + code));
+    setCell_(cid, 'PINs', i, 'Reset Expires', stamp_(new Date(Date.now() + 3 * 86400000)));
     setCell_(cid, 'PINs', i, 'Status', 'Reset ' + now_() + ' by ' + who.name);
     accessLog_('', '', 'pin reset', empId, 'OK', who.name);
-    return { message: 'PIN reset. ' + (p.first || p.name) + ' chooses a new one on any store iPad with the setup code.' };
+    const first = p.first || p.name.split(' ')[0];
+    return {
+      message: 'PIN reset. Text ' + first + ' the code below.', code: code,
+      text: 'Hi ' + first + ', your Prime One Clock PIN was reset. On the store iPad, tap your name, enter code ' + code + ', then choose a new 6-digit PIN. The code works for 3 days.'
+    };
   });
 }
 
@@ -583,13 +744,13 @@ function unlockPin_(who, empId) {
 /** One week (Mon–Sat) for one store or ALL. Per person per day: punches, hours, late/early flags. */
 function timesheet_(who, storeId, weekStart) {
   const ws = mondayOf_(weekStart || today_());
-  const days = [0, 1, 2, 3, 4, 5].map(n => addDays_(ws, n));
+  const days = [0, 1, 2, 3, 4, 5, 6].map(n => addDays_(ws, n));   // Sunday too, so no punch is ever left out
   const sched = schedules_();
   const people = clockPeople_(true);
   const byId = {}; people.forEach(p => byId[p.id] = p);
   const punches = readTable_(IDS.CLOCK, 'Punches').filter(p => {
     const d = asDay_(p['Punch Time']);
-    return d >= ws && d <= days[5] && (storeId === 'ALL' || !storeId || p['Store ID'] === storeId || (byId[p['Employee ID']] || {}).storeId === storeId);
+    return d >= ws && d <= days[6] && (storeId === 'ALL' || !storeId || p['Store ID'] === storeId || (byId[p['Employee ID']] || {}).storeId === storeId);
   });
   const ids = {};
   people.filter(p => p.clocksIn && (storeId === 'ALL' || !storeId || p.storeId === storeId)).forEach(p => ids[p.id] = true);
@@ -605,7 +766,7 @@ function timesheet_(who, storeId, weekStart) {
       const active = list.filter(x => x['Status'] === 'Active');
       const r = pair_(active);
       Object.keys(r.byStore).forEach(s => storeMin[s] = (storeMin[s] || 0) + r.byStore[s]);
-      const s = schedFor_(sched, id, p, n);
+      const s = n < 6 ? schedFor_(sched, id, p, n) : null;
       const flags = [];
       if (r.open && day === today_()) flags.push('On the clock');
       else if (r.open) { flags.push('No clock-out'); open++; }
@@ -626,7 +787,7 @@ function timesheet_(who, storeId, weekStart) {
       if (s && !active.length && day === today_() && nowMin_() > s.start + GRACE_MIN) flags.push('Not in yet');
       total += r.minutes;
       return {
-        date: day, dow: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][n], schedule: s ? s.label : '',
+        date: day, dow: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][n], schedule: s ? s.label : '',
         firstIn: r.firstIn ? hm_(r.firstIn) : '', lastOut: r.lastOut ? hm_(r.lastOut) : '',
         hours: round2_(r.minutes / 60), lateMin: lateMin, earlyMin: earlyMin, flags: flags,
         punches: list.map(x => ({
@@ -668,6 +829,7 @@ function editPunchCore_(who, punchId, time, type, reason, fixId) {
   const i = rows.findIndex(p => p['Punch ID'] === punchId);
   if (i === -1) throw new Error('Unknown punch.');
   if (rows[i]['Status'] !== 'Active') throw new Error('That punch was removed.');
+  clearReview_(who, rows, i);
   if (time) {
     const t = checkStamp_(time);
     if (asTime_(t) > Date.now() + 60000) throw new Error('The time cannot be in the future.');
@@ -679,6 +841,27 @@ function editPunchCore_(who, punchId, time, type, reason, fixId) {
     setCell_(IDS.CLOCK, 'Punches', i, 'Type', type);
     editLog_(who, 'Edit', punchId, 'Type', rows[i]['Type'], type, reason, fixId);
   }
+  return rows[i]['Employee ID'];
+}
+/** "Time is OK": Juliana checked an offline punch flagged REVIEW. */
+function okPunchCore_(who, punchId) {
+  const rows = readTable_(IDS.CLOCK, 'Punches');
+  const i = rows.findIndex(p => p['Punch ID'] === punchId);
+  if (i === -1) throw new Error('Unknown punch.');
+  if (!clearReview_(who, rows, i)) throw new Error('That punch was not flagged.');
+  editLog_(who, 'Checked', punchId, 'Notes', 'REVIEW', 'Checked', 'Offline time checked', '');
+}
+function clearReview_(who, rows, i) {
+  const n = String(rows[i]['Notes'] || '');
+  if (!/REVIEW:/.test(n)) return false;
+  setCell_(IDS.CLOCK, 'Punches', i, 'Notes', n.replace(/REVIEW:/g, 'Checked by ' + who.name + ' ' + today_() + ':'));
+  return true;
+}
+function closeRefused_(who, row) {
+  const rows = readTable_(IDS.CLOCK, 'Refused');
+  if (!rows[row] || rows[row]['Status'] !== 'Open') throw new Error('Already handled.');
+  setCell_(IDS.CLOCK, 'Refused', row, 'Status', 'Handled');
+  setCell_(IDS.CLOCK, 'Refused', row, 'Handled By', who.name + ' ' + now_());
 }
 function voidPunchCore_(who, punchId, reason, fixId) {
   const rows = readTable_(IDS.CLOCK, 'Punches');
@@ -687,6 +870,7 @@ function voidPunchCore_(who, punchId, reason, fixId) {
   if (rows[i]['Status'] !== 'Active') throw new Error('Already removed.');
   setCell_(IDS.CLOCK, 'Punches', i, 'Status', 'Voided');
   editLog_(who, 'Void', punchId, 'Status', 'Active', 'Voided', reason, fixId);
+  return rows[i]['Employee ID'];
 }
 function addPunchCore_(who, employeeId, storeId, type, time, reason, fixId) {
   oneOf_(type, ['IN', 'OUT']);
@@ -723,33 +907,57 @@ function editLog_(who, action, punchId, field, oldV, newV, reason, fixId) {
  */
 function setupV2() {
   officeWho_();
-  secret_();
+  secret_(); pinPepper_();
   const props = PropertiesService.getScriptProperties();
-  const clockFile = DriveApp.getFileById(IDS.CLOCK);
+  const notes = [];
   let credId = props.getProperty('CRED_ID');
+  const credHead = ['Employee ID', 'Employee Name', 'PIN Hash', 'Salt', 'Status', 'Set On', 'Set By', 'Failed Tries', 'Last Fail', 'Locked', 'Locked At', 'Last Used', 'Reset Code', 'Reset Expires'];
   if (!credId) {
+    // Stays in Andre's own Drive (not in a shared folder), so only he and this script can open it.
     const ss = SpreadsheetApp.create('SYSTEM · Clock PINs (restricted)');
     const sh = ss.getSheets()[0].setName('PINs');
-    sh.getRange(1, 1, 1, 12).setValues([['Employee ID', 'Employee Name', 'PIN Hash', 'Salt', 'Status', 'Set On', 'Set By', 'Failed Tries', 'Last Fail', 'Locked', 'Locked At', 'Last Used']]);
+    sh.getRange(1, 1, 1, credHead.length).setValues([credHead]);
     sh.setFrozenRows(1);
     credId = ss.getId();
-    try { const parent = clockFile.getParents(); if (parent.hasNext()) DriveApp.getFileById(credId).moveTo(parent.next()); } catch (e) {}
     props.setProperty('CRED_ID', credId);
   }
+  const cred = SpreadsheetApp.openById(credId);
+  const ps = cred.getSheetByName('PINs');
+  const ch = ps.getRange(1, 1, 1, ps.getLastColumn()).getValues()[0].map(String);
+  credHead.forEach(k => { if (ch.indexOf(k) === -1) { ps.getRange(1, ch.length + 1).setValue(k); ch.push(k); } });
+  plainText_(ps, ch, credHead);
+  try { cred.setSpreadsheetTimeZone(TZ); } catch (e) {}
+  try {
+    const f = DriveApp.getFileById(credId);
+    const extra = f.getEditors().concat(f.getViewers()).map(u => u.getEmail()).filter(e => e && e.toLowerCase() !== 'andre@primeoneinc.com');
+    if (extra.length) notes.push('WARNING: the PINs sheet is shared with ' + extra.join(', ') + '. Remove them.');
+  } catch (e) {}
+
   const clock = SpreadsheetApp.openById(IDS.CLOCK);
-  if (!clock.getSheetByName('Visits')) {
-    const v = clock.insertSheet('Visits');
-    v.getRange(1, 1, 1, 7).setValues([['Date', 'Employee ID', 'Employee Name', 'Home Store', 'Store ID', 'Device ID', 'First Punch']]);
-    v.setFrozenRows(1);
-  }
+  try { if (clock.getSpreadsheetTimeZone() !== TZ) { clock.setSpreadsheetTimeZone(TZ); notes.push('Time Clock sheet time zone set to ' + TZ + '.'); } } catch (e) {}
+  try { const core = SpreadsheetApp.openById(IDS.CORE); if (core.getSpreadsheetTimeZone() !== TZ) notes.push('NOTE: Core Data time zone is ' + core.getSpreadsheetTimeZone() + ', not ' + TZ + '.'); } catch (e) {}
+  const tab = (name, head) => {
+    let sh = clock.getSheetByName(name);
+    if (!sh) { sh = clock.insertSheet(name); sh.getRange(1, 1, 1, head.length).setValues([head]); sh.setFrozenRows(1); }
+    return sh;
+  };
+  tab('Visits', ['Date', 'Employee ID', 'Employee Name', 'Home Store', 'Store ID', 'Device ID', 'First Punch']);
+  tab('Refused', ['Refused At', 'Made At', 'Store ID', 'Device ID', 'Employee ID', 'Employee Name', 'Cell (last 4)', 'Showed As', 'Reason', 'Status', 'Handled By']);
   const pu = clock.getSheetByName('Punches');
   const h = pu.getRange(1, 1, 1, pu.getLastColumn()).getValues()[0].map(String);
-  if (h.indexOf('Client ID') === -1) pu.getRange(1, h.length + 1).setValue('Client ID');
+  if (h.indexOf('Client ID') === -1) { pu.getRange(1, h.length + 1).setValue('Client ID'); h.push('Client ID'); }
+  plainText_(pu, h, ['Client ID']);
+  const dv = clock.getSheetByName('Devices');
+  plainText_(dv, dv.getRange(1, 1, 1, dv.getLastColumn()).getValues()[0].map(String), ['Setup Code', 'Token Hash']);
   childFolder_(DriveApp.getFolderById(IDS.MEDIA_LIBRARY), 'Time Clock Photos');
   props.setProperty('STATE_READY', '');   // rebuild "last punch" with stores
   rebuildState_();
   MailApp.getRemainingDailyQuota();       // asks for the email permission now, not at the first lockout
-  return 'Ready. PIN setup code: ' + setupCode_() + '. PINs sheet: ' + SpreadsheetApp.openById(credId).getUrl();
+  return ['Ready. PIN setup code: ' + setupCode_() + '.', 'PINs sheet: ' + cred.getUrl()].concat(notes).join('\n');
+}
+/** Columns that must stay exactly as typed (codes, hashes, IDs): plain text, so Sheets never turns them into numbers or dates. */
+function plainText_(sh, headers, names) {
+  names.forEach(n => { const c = headers.indexOf(n) + 1; if (c) sh.getRange(1, c, sh.getMaxRows ? sh.getMaxRows() : 1000, 1).setNumberFormat('@'); });
 }
 
 /* ============================ people, stores, schedules ============================ */
@@ -830,13 +1038,15 @@ function storeName_(id) {
   return s ? s.name : id;
 }
 
-function stateOf_(last) {
+/** The person's state at refMs (default now): in or out, and since when. */
+function stateOf_(last, refMs) {
+  const ref = refMs || Date.now();
   if (!last) return { status: 'out', since: '', sinceLabel: '', openSince: '', storeId: '' };
   const t = asTime_(last['Punch Time']);
   const label = Utilities.formatDate(new Date(t), TZ, asDay_(last['Punch Time']) === today_() ? 'h:mm a' : 'EEE M/d h:mm a');
   const storeId = last['Store ID'] || '';
   if (last['Type'] === 'IN') {
-    if (Date.now() - t > OPEN_SHIFT_HOURS * 3600000) return { status: 'out', since: '', sinceLabel: '', openSince: label, openDate: asDay_(last['Punch Time']), storeId: '' };
+    if (ref - t > OPEN_SHIFT_HOURS * 3600000) return { status: 'out', since: '', sinceLabel: '', openSince: label, openDate: asDay_(last['Punch Time']), storeId: '' };
     return { status: 'in', since: str_(last['Punch Time']), sinceLabel: label, openSince: '', storeId: storeId };
   }
   return { status: 'out', since: str_(last['Punch Time']), sinceLabel: label, openSince: '', storeId: storeId };
@@ -914,6 +1124,18 @@ function rebuildState_() {
   props.setProperties(set);
   return (LAST_ = out);
 }
+/** After an office edit or an undo: recompute one person's last punch from the newest rows. */
+function rebuildOne_(empId) {
+  if (!empId) return;
+  let best = null;
+  recentRows_(4000).forEach(p => {
+    if (p['Employee ID'] !== empId || p['Status'] !== 'Active') return;
+    if (!best || asTime_(p['Punch Time']) >= asTime_(best['Punch Time'])) best = p;
+  });
+  const props = PropertiesService.getScriptProperties();
+  if (!best) { props.deleteProperty('LAST_' + empId); if (LAST_) delete LAST_[empId]; return; }
+  setLast_(empId, best['Punch ID'], best['Type'], str_(best['Punch Time']), best['Store ID']);
+}
 function setLast_(empId, punchId, type, time, storeId) {
   const v = { 'Punch ID': punchId, 'Type': type, 'Punch Time': time, 'Store ID': storeId || '' };
   PropertiesService.getScriptProperties().setProperty('LAST_' + empId, JSON.stringify(v));
@@ -953,30 +1175,34 @@ function headers_(fileId, name) {
   return HEAD_[key];
 }
 const ROWS_ = {};
-function readTable_(fileId, name) {
+/** Rows as objects. Each remembers its real sheet row (__row), so a blank row never shifts writes. */
+function readTable_(fileId, name, fresh) {
   const key = fileId + '|' + name;
-  if (ROWS_[key]) return ROWS_[key];
+  if (ROWS_[key] && !fresh) return ROWS_[key];
   const sh = sheet_(fileId, name);
   const last = sh.getLastRow();
   const h = headers_(fileId, name);
   ROWS_[key] = last < 2 ? [] : sh.getRange(2, 1, last - 1, h.length).getValues()
-    .map(r => { const o = {}; h.forEach((k, i) => o[k] = r[i]); return o; })
+    .map((r, n) => { const o = {}; h.forEach((k, i) => o[k] = r[i]); Object.defineProperty(o, '__row', { value: n + 2 }); return o; })
     .filter(o => o[h[0]] !== '');
   return ROWS_[key];
 }
 function appendRow_(fileId, name, obj) {
   const h = headers_(fileId, name);
-  sheet_(fileId, name).appendRow(h.map(k => (k in obj ? obj[k] : '')));
+  const sh = sheet_(fileId, name);
+  sh.appendRow(h.map(k => (k in obj ? obj[k] : '')));
   const key = fileId + '|' + name;
-  if (ROWS_[key]) { const o = {}; h.forEach(k => o[k] = k in obj ? obj[k] : ''); ROWS_[key].push(o); }
+  if (ROWS_[key]) { const o = {}; h.forEach(k => o[k] = k in obj ? obj[k] : ''); Object.defineProperty(o, '__row', { value: sh.getLastRow() }); ROWS_[key].push(o); }
 }
-/** dataIndex = position in readTable_ result. Assumes no blank first-column rows above it. */
+/** dataIndex = position in the readTable_ result; the write goes to that row's real sheet row. */
 function setCell_(fileId, name, dataIndex, header, value) {
   const col = headers_(fileId, name).indexOf(header) + 1;
   if (!col) throw new Error('Missing column ' + header + ' in ' + name);
-  sheet_(fileId, name).getRange(dataIndex + 2, col).setValue(value);
-  const key = fileId + '|' + name;
-  if (ROWS_[key] && ROWS_[key][dataIndex]) ROWS_[key][dataIndex][header] = value;
+  const rows = readTable_(fileId, name);
+  const r = rows[dataIndex];
+  if (!r || !r.__row) throw new Error('Row not found in ' + name + '. Try again.');
+  sheet_(fileId, name).getRange(r.__row, col).setValue(value);
+  r[header] = value;
 }
 function nextId_(fileId, name, header, prefix, width) {
   let max = 0;
@@ -997,7 +1223,7 @@ function accessLog_(devId, storeId, action, empId, result, detail) {
 }
 function withLock_(fn) {
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(25000)) throw new Error('Busy. Try again in a few seconds.');
+  if (!lock.tryLock(25000)) throw new Error('RETRY: Busy. Try again in a few seconds.');
   try { return fn(); } finally { SpreadsheetApp.flush(); lock.releaseLock(); }
 }
 
@@ -1005,7 +1231,23 @@ function withLock_(fn) {
 
 function must_(v, label) { if (v === undefined || v === null || String(v).trim() === '') throw new Error(label + ' is required.'); }
 function oneOf_(v, list) { if (list.indexOf(v) === -1) throw new Error('Invalid choice: ' + v); return v; }
-function text_(v, max) { return String(v === undefined || v === null ? '' : v).trim().slice(0, max); }
+/** Free text from people: trimmed, and never starts like a spreadsheet formula. */
+function text_(v, max) { return String(v === undefined || v === null ? '' : v).trim().replace(/^[=+\-@\t\r]+/, '').slice(0, max); }
+/** 6 random digits from a UUID (not Math.random). */
+function rand6_() { return String(100000 + parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 12), 16) % 900000); }
+/** Counters that survive across requests (Script Properties). Call bumpWindow_ inside withLock_. */
+function windowCount_(key) {
+  const v = String(PropertiesService.getScriptProperties().getProperty('W_' + key) || '').split('|');
+  return Number(v[1] || 0) > Date.now() ? Number(v[0] || 0) : 0;
+}
+function bumpWindow_(key, seconds) {
+  const props = PropertiesService.getScriptProperties();
+  const v = String(props.getProperty('W_' + key) || '').split('|');
+  const live = Number(v[1] || 0) > Date.now();
+  const n = (live ? Number(v[0] || 0) : 0) + 1;
+  props.setProperty('W_' + key, n + '|' + (live ? v[1] : Date.now() + seconds * 1000));
+  return n;
+}
 function digits_(v) { return String(v || '').replace(/\D/g, '').slice(-10); }
 function checkDate_(v, label) { if (!/^\d{4}-\d{2}-\d{2}$/.test(String(v))) throw new Error(label + ' must be a date.'); }
 /** "2026-10-28 08:02" or "...:ss" → "2026-10-28 08:02:00" */

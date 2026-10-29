@@ -148,7 +148,7 @@ select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg 
 .of-photo{display:block;width:120px;height:120px;object-fit:cover;border:1px solid var(--hair);margin:4px 0 18px}
 @media(max-width:760px){
   .of-kpis,.of-kpis.five{grid-template-columns:1fr 1fr}
-  .of-kpi{padding:12px 14px 14px}.of-kpi .v{font-size:26px;margin-top:8px}.of-kpi .s{display:none}.of-kpi.zero{display:none}
+  .of-kpi{padding:12px 14px 14px}.of-kpi .v{font-size:26px;margin-top:8px}.of-kpi .s{display:none}
   .of-kpis{margin-bottom:26px}
   .of-fix .acts .of-inp{flex:1 1 100%}.of-fix .acts .of-sp{display:none}.of-fix .acts .of-btn{flex:1}
   .of-wrap{padding:22px 16px 60px}
@@ -169,7 +169,14 @@ select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg 
 .of-setup p{color:var(--steel);font-size:14px;line-height:1.55;max-width:460px}
 .of-note{color:var(--steel);font-size:14px;line-height:1.7;max-width:680px;margin-top:8px}
 .of-chip.rv{border-color:var(--amber)}.of-chip .rvt{font-size:11px;color:#8A5A12;font-weight:600}
-.of-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.of-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;align-items:center}
+.of-chips{display:flex;flex-wrap:wrap;gap:8px}.of-chips .of-toggle{min-height:40px;font-size:13px}
+.of-review{border-left:3px solid var(--amber);background:#FBF5EA;padding:14px 16px;font-size:14px;line-height:1.55;margin:0 0 18px;color:var(--navy)}
+.of-review .of-btn{display:block;margin-top:10px}
+.of-upd.stale{color:#E3B66B}
+.of-search{min-width:240px}
+.of-row .inl{display:flex;gap:8px;margin-left:12px;flex:none}.of-row .inl .of-btn{min-height:40px;padding:8px 14px}
+.of-copy{width:100%;min-height:110px;font-size:14px;line-height:1.5;margin:6px 0 12px}
 </style>
 </head>
 <body>
@@ -252,7 +259,7 @@ function friendlyStamp(st) {
 }
 function setUpd(t) { $('#offUpd').textContent = t; }
 function takeOffice(d) {
-  OFF.home = d.home; OFF.cur = d.sheet; OFF.weeks = {}; OFF.updated = nowLabel();
+  OFF.home = d.home; OFF.cur = d.sheet; OFF.weeks = {}; OFF.updated = nowLabel(); OFF.loadedAt = Date.now();
   if (!OFF.week) OFF.week = d.home.currentWeek;
   $('#offWho').textContent = d.home.me;
   const locked = d.home.people.filter(p => p.pin === 'locked').length;
@@ -299,7 +306,10 @@ function renderToday() {
   const noPin = H.people.filter(p => p.pin === 'none');
   const review = rows.filter(r => r.reviewPunches);
   const issues = [];
-  locked.forEach(p => issues.push({ r: { id: p.id, name: p.name, storeId: p.storeId }, sev: 'red', what: 'PIN locked', det: 'Can’t clock in until you unlock it', go: 'people' }));
+  locked.forEach(p => issues.push({ r: { id: p.id, name: p.name, storeId: p.storeId }, sev: 'red', what: 'PIN locked', det: 'Can’t clock in until you unlock it', acts: '<button class="of-btn" data-unlock="' + esc(p.id) + '">Unlock</button><button class="of-btn alt" data-reset="' + esc(p.id) + '">Reset PIN</button>' }));
+  (H.refused || []).forEach(x => issues.push({ r: { id: x.employeeId, name: x.name, storeId: x.storeId }, sev: 'red', what: 'Offline punch NOT saved', det: x.reason + ' · made ' + friendlyStamp(x.at) + (x.showed ? ' · showed ' + (x.showed === 'IN' ? 'clock in' : 'clock out') : ''),
+    acts: (x.employeeId ? '<button class="of-btn" data-radd="' + x.row + '">Add punch</button>' : '') + '<button class="of-btn alt" data-rdone="' + x.row + '">Done</button>' }));
+  H.people.filter(p => p.openSince && !missing.some(r => r.id === p.id)).forEach(p => issues.push({ r: { id: p.id, name: p.name, storeId: p.storeId }, sev: 'red', what: 'No clock-out', det: 'Clocked in ' + p.openSince + ', never clocked out' }));
   notIn.forEach(r => { const d = todayOf(r); issues.push({ r, sev: 'red', what: 'Not in yet', det: d.schedule ? 'Scheduled ' + d.schedule.split('–')[0] : '' }); });
   missing.forEach(r => r.days.filter(d => d.date < t && d.flags.includes('No clock-out')).forEach(d => issues.push({ r, sev: 'red', what: 'No clock-out ' + dayName(d.date), det: 'In at ' + d.firstIn })));
   review.forEach(r => issues.push({ r, sev: 'amber', what: 'Check offline time', det: r.reviewPunches + ' punch' + (r.reviewPunches > 1 ? 'es' : '') + ' saved while the iPad was offline' }));
@@ -307,7 +317,7 @@ function renderToday() {
     if (d.lateMin > 120) issues.push({ r, sev: 'red', what: 'First punch ' + d.firstIn, det: 'Likely a missed clock-in · scheduled ' + d.schedule.split('–')[0] });
     else issues.push({ r, sev: 'amber', what: 'Late ' + fmtDur(d.lateMin), det: 'In ' + d.firstIn + ' · scheduled ' + d.schedule.split('–')[0] }); });
   rows.forEach(r => { const d = todayOf(r); if (d && d.earlyMin) issues.push({ r, sev: 'amber', what: 'Left ' + fmtDur(d.earlyMin) + ' early', det: 'Out ' + d.lastOut }); });
-  rows.forEach(r => { const d = todayOf(r); const n = d ? d.punches.filter(p => p.status === 'Active' && p.source === 'Kiosk' && !p.photo).length : 0; if (n) issues.push({ r, sev: 'red', what: 'Punch without photo', det: 'Check the iPad camera' }); });
+  rows.forEach(r => { const d = todayOf(r); const n = d ? d.punches.filter(p => p.status === 'Active' && p.source === 'Kiosk' && !p.photo).length : 0; if (n) issues.push({ r, sev: 'amber', what: 'Punch without photo', det: 'Check the iPad camera at ' + storeName(r.storeId) }); });
   const byStore = {};
   rows.forEach(r => { (byStore[r.storeId || '—'] = byStore[r.storeId || '—'] || []).push(r); });
   const storeIds = Object.keys(byStore).sort((a, b) => storeName(a).localeCompare(storeName(b)));
@@ -323,7 +333,9 @@ function renderToday() {
       kpi('PIN locked', locked.length, noPin.length + ' still need to set a PIN', 'red', 'people') +
     '</div>' +
     '<section class="of-sec"><div class="of-sec-h"><h2>Needs attention</h2><span>' + (issues.length ? issues.length + ' item' + (issues.length > 1 ? 's' : '') : '') + '</span></div>' +
-    (issues.length ? issues.map(i => '<button class="of-row" ' + (i.go ? 'data-gotab="' + i.go + '"' : 'data-person="' + esc(i.r.id) + '"') + '><span class="of-mark ' + i.sev + '"></span><div><div class="nm">' + esc(i.r.name) + '</div><div class="sub">' + esc(storeName(i.r.storeId)) + '</div></div><div class="rt"><b>' + esc(i.what) + '</b>' + esc(i.det || '') + '</div></button>').join('')
+    (issues.length ? issues.map(i => i.acts
+        ? '<div class="of-row"><span class="of-mark ' + i.sev + '"></span><div><div class="nm">' + esc(i.r.name) + '</div><div class="sub">' + esc(storeName(i.r.storeId)) + '</div></div><div class="rt"><b>' + esc(i.what) + '</b>' + esc(i.det || '') + '</div><div class="inl">' + i.acts + '</div></div>'
+        : '<button class="of-row" ' + (i.go ? 'data-gotab="' + i.go + '"' : 'data-person="' + esc(i.r.id) + '"') + '><span class="of-mark ' + i.sev + '"></span><div><div class="nm">' + esc(i.r.name) + '</div><div class="sub">' + esc(storeName(i.r.storeId)) + '</div></div><div class="rt"><b>' + esc(i.what) + '</b>' + esc(i.det || '') + '</div></button>').join('')
       : '<div class="of-ok"><span class="of-mark green"></span>Nothing needs attention right now.</div>') +
     '</section>' +
     (visits.length ? '<section class="of-sec"><div class="of-sec-h"><h2>Working at another store today</h2><span>' + visits.length + '</span></div>' +
@@ -338,6 +350,13 @@ function renderToday() {
         '</ul></div>';
     }).join('') + '</div></section></div>';
   $('#offBody').querySelectorAll('[data-person]').forEach(b => b.onclick = () => personDrawer(b.dataset.person, OFF.cur));
+  wirePinButtons($('#offBody'));
+  $('#offBody').querySelectorAll('[data-rdone]').forEach(b => b.onclick = () => busy(b, async () => { await oapi('closeRefused', { row: +b.dataset.rdone }); toast('Done'); await officeLoad(); }));
+  $('#offBody').querySelectorAll('[data-radd]').forEach(b => b.onclick = () => {
+    const x = (H.refused || []).find(y => String(y.row) === b.dataset.radd); if (!x) return;
+    const m = String(x.at).match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})/);
+    punchAdder(OFF.cur, x.employeeId, m ? m[1] : H.today, { name: x.name, storeId: x.storeId, time: m ? m[2] : '', type: x.showed, reason: 'iPad was offline', refusedRow: x.row });
+  });
   $('#offBody').querySelectorAll('[data-gotab]').forEach(b => b.onclick = () => { OFF.tab = b.dataset.gotab; if (OFF.tab === 'people') OFF.pinFilter = 'locked'; officeRender(); });
   $('#offBody').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { OFF.tab = b.dataset.go; if (b.dataset.go === 'week') { OFF.store = 'ALL'; OFF.week = H.currentWeek; OFF.probOnly = true; } if (b.dataset.go === 'people') OFF.pinFilter = 'locked'; officeRender(); });
 }
@@ -355,7 +374,7 @@ async function getWeek(force) {
 async function renderWeek() {
   const stores = OFF.home.stores || [];
   $('#offBody').innerHTML = '<div class="of-wrap"><div class="of-eye">Timesheets</div><h1 class="of-h1" id="wTitle">Week of ' + esc(niceDate(OFF.week)) + '</h1>' +
-    '<div class="of-bar"><select class="of-inp" id="wStore"><option value="ALL">All stores</option>' + stores.map(s => '<option value="' + s.id + '">' + esc(s.name) + '</option>').join('') + '</select>' +
+    '<div class="of-bar"><select class="of-inp" id="wStore"><option value="ALL">All stores</option>' + stores.map(s => '<option value="' + esc(s.id) + '">' + esc(s.name) + '</option>').join('') + '</select>' +
     '<div class="of-step"><button id="wPrev" aria-label="Previous week">' + CARET_L + '</button><div id="wLbl">' + esc(niceDate(OFF.week)) + '</div><button id="wNext" aria-label="Next week"' + (OFF.week >= OFF.home.currentWeek ? ' disabled' : '') + '>' + CARET_R + '</button></div>' +
     '<button class="of-toggle' + (OFF.probOnly ? ' on' : '') + '" id="wProb"><i></i>Problems only</button>' +
     '<span class="of-sp"></span><button class="of-btn alt" id="wCsv">Download CSV</button></div><div id="wList"><div class="of-skel" style="height:96px"></div><div class="of-skel"></div><div class="of-skel"></div></div></div>';
@@ -389,7 +408,7 @@ function drawWeek() {
       const np = noPhotoCount(r), open = OFF.open[r.id];
       const pills = (r.totalHours > 40 ? '<span class="of-tag red">Over 40 h</span>' : '') + (r.openDays ? '<span class="of-tag red">Missing clock-out ' + r.openDays + '×</span>' : '') + (np ? '<span class="of-tag red">No photo ' + np + '×</span>' : '') +
         (r.reviewPunches ? '<span class="of-tag amber">Check offline time ' + r.reviewPunches + '×</span>' : '') + (r.lateDays ? '<span class="of-tag amber">Late ' + r.lateDays + '×</span>' : '') + (r.earlyDays ? '<span class="of-tag amber">Left early ' + r.earlyDays + '×</span>' : '');
-      return '<div class="of-person"><button class="of-row" data-p="' + r.id + '" aria-expanded="' + (open ? 'true' : 'false') + '"><span class="of-mark ' + (problem(r) ? (r.openDays || np || r.totalHours > 40 ? 'red' : 'amber') : r.totalHours ? 'green' : '') + '"></span><div><div class="nm">' + esc(r.name) + '</div><div class="sub">' + esc(storeName(r.storeId)) + '</div><div>' + pills + '</div></div><div class="rt"><span class="of-big">' + hrs(r.totalHours) + '</span><span class="of-dec">' + r.totalHours.toFixed(2) + ' h' + (r.totalHours > 40 ? ' · 40.00 reg + ' + (r.totalHours - 40).toFixed(2) + ' OT' : '') + '</span></div></button>' +
+      return '<div class="of-person"><button class="of-row" data-p="' + esc(r.id) + '" aria-expanded="' + (open ? 'true' : 'false') + '"><span class="of-mark ' + (problem(r) ? (r.openDays || np || r.totalHours > 40 ? 'red' : 'amber') : r.totalHours ? 'green' : '') + '"></span><div><div class="nm">' + esc(r.name) + '</div><div class="sub">' + esc(storeName(r.storeId)) + '</div><div>' + pills + '</div></div><div class="rt"><span class="of-big">' + hrs(r.totalHours) + '</span><span class="of-dec">' + r.totalHours.toFixed(2) + ' h' + (r.totalHours > 40 ? ' · 40.00 reg + ' + (r.totalHours - 40).toFixed(2) + ' OT' : '') + '</span></div></button>' +
         (open ? daysHtml(r) : '') + '</div>';
     }).join('') : '<div class="of-ok"><span class="of-mark green"></span>' + (OFF.probOnly ? 'No problems this week.' : 'No one in this view.') + '</div>') +
     (zeros.length && !OFF.probOnly ? '<div class="of-zero">No hours this week: ' + zeros.map(r => esc(r.name)).join(', ') + '</div>' : '') + '</section>';
@@ -399,10 +418,10 @@ function drawWeek() {
 function shortSched(s) { return String(s || '').replace(/:00/g, '').replace(/ ?AM/g, '').replace(/ ?PM/g, ''); }
 function daysHtml(r) {
   const today = OFF.home.today;
-  return '<div class="of-days">' + r.days.filter(d => d.date <= today).map(d => '<div class="of-day"><div class="d"><b>' + d.dow + '</b><span>' + niceDate(d.date) + (d.schedule ? ' · ' + esc(shortSched(d.schedule)) : '') + '</span></div><div>' +
+  return '<div class="of-days">' + r.days.filter(d => d.date <= today && (d.dow !== 'Sun' || d.punches.length)).map(d => '<div class="of-day"><div class="d"><b>' + d.dow + '</b><span>' + niceDate(d.date) + (d.schedule ? ' · ' + esc(shortSched(d.schedule)) : '') + '</span></div><div>' +
     d.punches.map(p => { const np = p.status === 'Active' && p.source === 'Kiosk' && !p.photo;
-      return '<button class="of-chip ' + (p.status !== 'Active' ? 'v ' : '') + (p.source !== 'Kiosk' ? 'fx ' : '') + (np ? 'np ' : '') + (p.review && p.status === 'Active' ? 'rv' : '') + '" data-pid="' + p.id + '" data-emp="' + r.id + '"><i>' + (p.type === 'IN' ? 'In' : 'Out') + '</i>' + esc(p.time) + (p.storeId !== r.storeId ? ' · ' + esc(storeName(p.storeId)) : '') + (p.source !== 'Kiosk' ? ' <span class="ed">edited</span>' : '') + (np ? ' <span class="np">no photo</span>' : '') + (p.review ? ' <span class="rvt">check time</span>' : '') + '</button>'; }).join('') +
-    '<button class="of-add" data-add="' + r.id + '" data-day="' + d.date + '">' + PLUS + 'Add punch</button>' +
+      return '<button class="of-chip ' + (p.status !== 'Active' ? 'v ' : '') + (p.source !== 'Kiosk' ? 'fx ' : '') + (np ? 'np ' : '') + (p.review && p.status === 'Active' ? 'rv' : '') + '" data-pid="' + esc(p.id) + '" data-emp="' + esc(r.id) + '"><i>' + (p.type === 'IN' ? 'In' : 'Out') + '</i>' + esc(p.time) + (p.storeId !== r.storeId ? ' · ' + esc(storeName(p.storeId)) : '') + (p.source !== 'Kiosk' ? ' <span class="ed">edited</span>' : '') + (np ? ' <span class="np">no photo</span>' : '') + (p.review ? ' <span class="rvt">check time</span>' : '') + '</button>'; }).join('') +
+    '<button class="of-add" data-add="' + esc(r.id) + '" data-day="' + d.date + '">' + PLUS + 'Add punch</button>' +
     '<div class="of-flags">' + tags(d.flags) + '</div></div><div class="h">' + (d.hours ? hrs(d.hours) : '') + '</div></div>').join('') + '</div>';
 }
 function wireDays(root, ts) {
@@ -410,7 +429,8 @@ function wireDays(root, ts) {
   root.querySelectorAll('[data-add]').forEach(b => b.onclick = () => punchAdder(ts, b.dataset.add, b.dataset.day));
 }
 function personDrawer(empId, ts) {
-  const r = ts.rows.find(x => x.id === empId); if (!r) return;
+  const r = ts.rows.find(x => x.id === empId);
+  if (!r) { OFF.tab = 'week'; OFF.probOnly = false; OFF.open[empId] = true; return officeRender(); }
   const el = drawer('<div class="of-eye">' + esc(storeName(r.storeId)) + ' · Week ' + ts.week + '</div><h3>' + esc(r.name) + '</h3><p class="lead">' + hrs(r.totalHours) + ' this week</p>' + daysHtml(r));
   wireDays(el, ts);
 }
@@ -434,9 +454,13 @@ function punchEditor(ts, empId, pid) {
     (p.notes ? '<p class="lead">' + esc(p.notes) + '</p>' : '') +
     (active ? '<div class="f"><label class="of-eye">Type</label><select class="of-inp" id="eTy"><option value="IN"' + (p.type === 'IN' ? ' selected' : '') + '>Clock in</option><option value="OUT"' + (p.type === 'OUT' ? ' selected' : '') + '>Clock out</option></select></div>' +
       '<div class="f"><label class="of-eye">Date and time</label><input type="datetime-local" class="of-inp" id="eAt" value="' + dt + '"></div>' +
-      '<div class="f"><label class="of-eye">Reason (kept in the edit log)</label><textarea class="of-inp" id="eWhy" style="min-height:90px"></textarea></div>' +
+      (p.review ? '<div class="of-review"><b>Saved while the iPad was offline.</b> ' + esc((String(p.notes).match(/REVIEW: ([^.]*)/) || [])[1] || '') + '<button class="of-btn" data-ok>Time is OK</button></div>' : '') +
+      reasonField('eWhy') +
       '<div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn" data-s>Save change</button></div>' +
       '<button class="of-btn red" data-v style="width:100%;margin-top:12px">Remove this punch</button>' : '<div class="acts"><button class="of-btn alt" data-c>Close</button></div>'));
+  wireReasons(el);
+  const okb = el.querySelector('[data-ok]');
+  if (okb) okb.onclick = () => busy(okb, async () => { await oapi('okPunch', { punchId: pid }); await afterEdit('Marked as checked'); });
   const s = el.querySelector('[data-s]');
   if (s) s.onclick = () => { if (!needReason('#eWhy')) return; busy(s, async () => { await oapi('editPunch', { punchId: pid, time: $('#eAt').value, type: $('#eTy').value, reason: $('#eWhy').value }); await afterEdit('Saved'); }); };
   const v = el.querySelector('[data-v]');
@@ -446,19 +470,40 @@ function punchEditor(ts, empId, pid) {
     busy(v, async () => { await oapi('voidPunch', { punchId: pid, reason: $('#eWhy').value }); await afterEdit('Punch removed (kept in the log)'); });
   };
 }
-function punchAdder(ts, empId, day) {
-  const r = ts.rows.find(x => x.id === empId);
+const REASONS = ['Forgot to clock out', 'Forgot to clock in', 'iPad was offline', 'Tapped the wrong name', 'Texted me the time'];
+function reasonField(id) {
+  return '<div class="f"><label class="of-eye">Reason (kept in the edit log)</label><div class="of-chips">' + REASONS.map(r => '<button type="button" class="of-toggle" data-r="' + esc(r) + '"><i></i>' + esc(r) + '</button>').join('') + '</div><textarea class="of-inp" id="' + id + '" style="min-height:70px;margin-top:10px" placeholder="Or write your own"></textarea></div>';
+}
+function wireReasons(el) {
+  el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+    const t = b.closest('.f').querySelector('textarea');
+    el.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', x === b));
+    t.value = b.dataset.r; t.classList.remove('err'); const m = t.parentNode.querySelector('.of-err'); if (m) m.textContent = '';
+  });
+}
+function punchAdder(ts, empId, day, preset) {
+  preset = preset || {};
+  const r = (ts && ts.rows.find(x => x.id === empId)) || { name: preset.name || empId, storeId: preset.storeId };
   const el = drawer('<div class="of-eye">Add punch</div><h3>' + esc(r.name) + '</h3><p class="lead">' + esc(longDate(day)) + '</p>' +
     '<div class="f"><label class="of-eye">Type</label><select class="of-inp" id="aTy"><option value="IN">Clock in</option><option value="OUT">Clock out</option></select></div>' +
     '<div class="f"><label class="of-eye">Time</label><input type="time" class="of-inp" id="aAt"></div>' +
-    '<div class="f"><label class="of-eye">Store</label><select class="of-inp" id="aSt">' + (OFF.home.stores || []).map(s => '<option value="' + s.id + '"' + (s.id === r.storeId ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></div>' +
-    '<div class="f"><label class="of-eye">Reason (kept in the edit log)</label><textarea class="of-inp" id="aWhy" style="min-height:90px"></textarea></div>' +
+    '<div class="f"><label class="of-eye">Store</label><select class="of-inp" id="aSt">' + (OFF.home.stores || []).map(s => '<option value="' + esc(s.id) + '"' + (s.id === r.storeId ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></div>' +
+    reasonField('aWhy') +
     '<div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn" data-s>Add punch</button></div>');
+  wireReasons(el);
+  if (preset.time) $('#aAt').value = preset.time;
+  if (preset.type) $('#aTy').value = preset.type;
+  if (preset.storeId) $('#aSt').value = preset.storeId;
+  if (preset.reason) $('#aWhy').value = preset.reason;
   const sb = el.querySelector('[data-s]');
   sb.onclick = () => {
     if (!$('#aAt').value) { $('#aAt').classList.add('err'); $('#aAt').focus(); return; }
     if (!needReason('#aWhy')) return;
-    busy(sb, async () => { await oapi('addPunch', { employeeId: empId, storeId: $('#aSt').value, type: $('#aTy').value, time: day + ' ' + $('#aAt').value, reason: $('#aWhy').value }); await afterEdit('Punch added'); });
+    busy(sb, async () => {
+      await oapi('addPunch', { employeeId: empId, storeId: $('#aSt').value, type: $('#aTy').value, time: day + ' ' + $('#aAt').value, reason: $('#aWhy').value });
+      if (preset.refusedRow != null) { try { await oapi('closeRefused', { row: preset.refusedRow }); } catch (e) {} }
+      await afterEdit('Punch added');
+    });
   };
 }
 function drawer(inner) {
@@ -492,35 +537,48 @@ function drawPeople() {
   const n = { all: all.length, locked: all.filter(p => p.state === 'locked').length, none: all.filter(p => p.state === 'none').length, set: all.filter(p => p.state === 'set').length };
   $('#pTitle').textContent = n.set + ' of ' + n.all + ' have set their PIN';
   const order = { locked: 0, none: 1, set: 2 };
-  const list = all.filter(p => OFF.pinFilter === 'all' || p.state === OFF.pinFilter).sort((a, b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name));
+  const q = (OFF.pinQ || '').toLowerCase();
+  const list = all.filter(p => (OFF.pinFilter === 'all' || p.state === OFF.pinFilter) && (!q || p.name.toLowerCase().includes(q))).sort((a, b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name));
   const f = (k, label) => '<button class="of-toggle' + (OFF.pinFilter === k ? ' on' : '') + '" data-f="' + k + '"><i></i>' + label + ' (' + n[k] + ')</button>';
   $('#pBody').innerHTML =
     '<div class="of-setup"><div><div class="of-eye">Setup code</div><div class="of-code">' + esc(P.setupCode) + '</div></div>' +
       '<p>Anyone without a PIN taps their name on a store iPad, enters this code, then chooses their own 6-digit PIN. Share it with managers by text. Change it if it gets around outside Prime One.</p>' +
       '<span class="of-sp"></span><button class="of-btn alt" id="pNewCode">Change code</button></div>' +
-    '<div class="of-filter">' + f('all', 'Everyone') + f('locked', 'Locked') + f('none', 'No PIN yet') + f('set', 'PIN set') + '</div>' +
+    '<div class="of-filter"><input class="of-inp of-search" id="pQ" placeholder="Search a name" value="' + esc(OFF.pinQ || '') + '" aria-label="Search a name">' + f('all', 'Everyone') + f('locked', 'Locked') + f('none', 'No PIN yet') + f('set', 'PIN set') + '</div>' +
     '<section class="of-sec"><div class="of-sec-h"><h2>' + ({ all: 'Everyone who clocks in', locked: 'Locked', none: 'No PIN yet', set: 'PIN set' })[OFF.pinFilter] + '</h2><span>' + list.length + '</span></div>' +
     (list.length ? list.map(p => '<div class="of-row of-pinrow"><span class="of-mark ' + (p.state === 'locked' ? 'red' : p.state === 'none' ? 'amber' : 'green') + '"></span><div><div class="nm">' + esc(p.name) + '</div><div class="sub">' + esc(storeName(p.storeId)) + ' · ' +
-        (p.state === 'locked' ? '<b style="color:var(--red)">Locked ' + esc(friendlyStamp(p.lockedAt)) + '</b>' : p.state === 'none' ? 'Has not set a PIN yet' : 'Set ' + esc(friendlyStamp(p.setOn)) + ' · last used ' + esc(friendlyStamp(p.lastUsed)) + (p.tries ? ' · ' + p.tries + ' wrong in a row' : '')) + '</div></div>' +
-        '<div class="acts">' + (p.state === 'locked' ? '<button class="of-btn" data-unlock="' + esc(p.id) + '">Unlock</button>' : '') + (p.state !== 'none' ? '<button class="of-btn alt" data-reset="' + esc(p.id) + '">Reset PIN</button>' : '') + '</div></div>').join('')
+        (p.state === 'locked' ? '<b style="color:var(--red)">Locked ' + esc(friendlyStamp(p.lockedAt)) + '</b>' : p.state === 'none' ? (p.resetPending ? 'PIN reset · waiting for them to choose a new one' : 'Has not set a PIN yet') : 'Set ' + esc(friendlyStamp(p.setOn)) + ' · last used ' + esc(friendlyStamp(p.lastUsed)) + (p.tries ? ' · ' + p.tries + ' wrong in a row' : '')) + '</div></div>' +
+        '<div class="acts">' + (p.state === 'locked' ? '<button class="of-btn" data-unlock="' + esc(p.id) + '">Unlock</button>' : '') + (p.state !== 'none' ? '<button class="of-btn alt" data-reset="' + esc(p.id) + '">Reset PIN</button>' : p.resetPending ? '<button class="of-btn alt" data-reset="' + esc(p.id) + '" data-sure="1">New code</button>' : '') + '</div></div>').join('')
       : '<div class="of-ok"><span class="of-mark green"></span>No one here.</div>') + '</section>' +
-    '<p class="of-note"><b>Unlock</b> keeps the same PIN (they just mistyped). <b>Reset PIN</b> clears it, and they choose a new one on any store iPad with the setup code. Nobody, including the office, can see a PIN.</p>';
+    '<p class="of-note"><b>Unlock</b> keeps the same PIN (they just mistyped). <b>Reset PIN</b> clears it and gives you a one-time code to text them; they choose a new PIN on any store iPad with that code. Nobody, including the office, can see a PIN.</p>';
+  const qi = $('#pQ'); qi.oninput = () => { OFF.pinQ = qi.value; const pos = qi.selectionStart; drawPeople(); const n = $('#pQ'); n.focus(); n.setSelectionRange(pos, pos); };
   $('#pBody').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { OFF.pinFilter = b.dataset.f; drawPeople(); });
-  $('#pBody').querySelectorAll('[data-unlock]').forEach(b => b.onclick = () => busy(b, async () => { const r = await oapi('unlockPin', { employeeId: b.dataset.unlock }); toast(r.message); await refreshPins(); }));
-  $('#pBody').querySelectorAll('[data-reset]').forEach(b => b.onclick = () => {
-    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Tap again to reset'; return; }
-    busy(b, async () => { const r = await oapi('resetPin', { employeeId: b.dataset.reset }); toast(r.message, 4500); await refreshPins(); });
-  });
+  wirePinButtons($('#pBody'));
   const nc = $('#pNewCode');
   nc.onclick = () => {
     if (nc.dataset.sure !== '1') { nc.dataset.sure = '1'; nc.textContent = 'Tap again to change'; return; }
     busy(nc, async () => { const r = await oapi('newSetupCode'); OFF.pins.setupCode = r.code; toast('New setup code: ' + r.code + '. The old one stops working now.', 6000); drawPeople(); });
   };
 }
+/** Unlock and Reset buttons, on Today and on People. Reset shows the one-time code and a text ready to copy. */
+function wirePinButtons(root) {
+  root.querySelectorAll('[data-unlock]').forEach(b => b.onclick = () => busy(b, async () => { const r = await oapi('unlockPin', { employeeId: b.dataset.unlock }); toast(r.message); await refreshPins(); }));
+  root.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => {
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Tap again to reset'; return; }
+    busy(b, async () => {
+      const r = await oapi('resetPin', { employeeId: b.dataset.reset });
+      if (!r.code) { toast(r.message, 5000); return refreshPins(); }
+      const el = drawer('<div class="of-eye">PIN reset</div><h3>Text this code</h3><div class="of-code">' + esc(r.code) + '</div><p class="lead">Works once, for this person only, for 3 days. Copy the text below and send it.</p>' +
+        '<textarea class="of-inp of-copy" id="rTxt" readonly>' + esc(r.text) + '</textarea><div class="acts"><button class="of-btn" data-copy>Copy text</button><button class="of-btn alt" data-c>Done</button></div>');
+      el.querySelector('[data-copy]').onclick = async () => { const t = $('#rTxt'); try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand('copy'); } toast('Copied'); };
+      refreshPins();
+    });
+  });
+}
 async function refreshPins() {
   OFF.pins = await oapi('pins');
   try { takeOffice(await oapi('home')); } catch (e) {}
-  if (OFF.tab === 'people') drawPeople();
+  if (OFF.tab === 'people' && $('#pBody')) drawPeople(); else if (OFF.tab === 'today') officeRender();
 }
 
 /* ---- Devices ---- */
@@ -528,27 +586,29 @@ function renderDevices() {
   const d = OFF.home.devices || [];
   const pname = id => (OFF.home.people.find(p => p.id === id) || {}).name || '';
   $('#offBody').innerHTML = '<div class="of-wrap"><div class="of-eye">Devices</div><h1 class="of-h1">' + d.filter(x => x.status === 'Active').length + ' active</h1>' +
+    (OFF.home.deviceSetupOff ? '<div class="of-review" style="margin-bottom:22px"><b>iPad setup is paused.</b> Too many wrong iPad codes were tried in an hour. If that was you, turn it back on. If not, someone was guessing codes. <button class="of-btn" id="dOn">Turn iPad setup back on</button></div>' : '') +
     '<div class="of-bar"><span class="of-sp"></span><button class="of-btn" id="dAdd">Add a device</button></div>' +
     '<section class="of-sec"><div class="of-sec-h"><h2>Store iPads and phones</h2><span>' + d.length + '</span></div>' +
     (d.length ? d.map(x => '<div class="of-row"><span class="of-mark ' + (x.status === 'Active' ? 'green' : 'amber') + '"></span><div><div class="nm">' + esc(x.name) + '</div><div class="sub">' + esc(storeName(x.storeId)) +
-      ' · ' + esc(x.id.slice(-4)) + (x.status === 'Active' ? ' · last seen ' + esc(friendlyStamp(x.lastSeen)) + (stampMs(x.lastSeen) && Date.now() - stampMs(x.lastSeen) > 86400000 ? ' <span class="of-tag amber">Not seen in 24 h</span>' : '') : ' · setup code <b style="color:var(--navy);letter-spacing:.08em">' + esc(x.code) + '</b>') + '</div></div>' +
-      '<div class="rt"><button class="of-btn red" data-rv="' + x.id + '">Remove</button></div></div>').join('') : '<div class="of-ok">No devices yet. Add one for each store iPad and each Jacksonville phone.</div>') + '</section>' +
+      ' · ' + esc(x.id.slice(-4)) + (x.status === 'Active' ? ' · last seen ' + esc(friendlyStamp(x.lastSeen)) + (stampMs(x.lastSeen) && Date.now() - stampMs(x.lastSeen) > 86400000 ? ' <span class="of-tag amber">Not seen in 24 h</span>' : '') : ' · iPad code <b style="color:var(--navy);letter-spacing:.08em">' + esc(x.code) + '</b>') + '</div></div>' +
+      '<div class="rt"><button class="of-btn red" data-rv="' + esc(x.id) + '">Remove</button></div></div>').join('') : '<div class="of-ok">No devices yet. Add one for each store iPad and each Jacksonville phone.</div>') + '</section>' +
     '<p style="color:var(--steel);font-size:14px;line-height:1.7;max-width:640px">On the iPad or phone, open the app link in Safari or Chrome. Tap Share › Add to Home Screen (on Android: menu › Install app). Open the new P1 Clock icon and enter the setup code. On store iPads, turn on Guided Access (Settings › Accessibility › Guided Access, with a passcode only Scott knows) so nobody can leave the app or change the iPad’s clock. Removing a device stops it from punching right away.</p></div>';
+  const on = $('#dOn'); if (on) on.onclick = () => busy(on, async () => { const r = await oapi('deviceSetupOn'); toast(r.message); await officeLoad(); });
   $('#dAdd').onclick = () => {
-    const el = drawer('<div class="of-eye">Add a device</div><h3>New setup code</h3><p class="lead">Creates a one-time code to enter on the iPad or phone.</p>' +
-      '<div class="f"><label class="of-eye">Store</label><select class="of-inp" id="dSt">' + (OFF.home.stores || []).map(s => '<option value="' + s.id + '">' + esc(s.name) + '</option>').join('') + '</select></div>' +
+    const el = drawer('<div class="of-eye">Add a device</div><h3>New iPad code</h3><p class="lead">Creates a one-time code to enter on the iPad or phone. (This is not the PIN setup code.)</p>' +
+      '<div class="f"><label class="of-eye">Store</label><select class="of-inp" id="dSt">' + (OFF.home.stores || []).map(s => '<option value="' + esc(s.id) + '">' + esc(s.name) + '</option>').join('') + '</select></div>' +
       '<div class="f"><label class="of-eye">Type</label><select class="of-inp" id="dTy"><option value="">Store iPad (whole crew)</option><option value="p">Personal phone (one person)</option></select></div>' +
       '<div class="f hidden" id="dPF"><label class="of-eye">Whose phone</label><select class="of-inp" id="dPe"></select></div>' +
       '<div class="f"><label class="of-eye">Name (optional)</label><input class="of-inp" id="dNm" placeholder="e.g. Wendell iPad"></div>' +
       '<div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn" data-s>Create code</button></div>');
-    const fill = () => { $('#dPe').innerHTML = OFF.home.people.filter(p => p.storeId === $('#dSt').value).map(p => '<option value="' + p.id + '">' + esc(p.name) + '</option>').join(''); };
+    const fill = () => { $('#dPe').innerHTML = OFF.home.people.filter(p => p.storeId === $('#dSt').value).map(p => '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>').join(''); };
     $('#dTy').onchange = () => { $('#dPF').classList.toggle('hidden', !$('#dTy').value); fill(); };
     $('#dSt').onchange = fill;
     const cb = el.querySelector('[data-s]');
     cb.onclick = () => busy(cb, async () => {
       {
         const r = await oapi('newDeviceCode', { storeId: $('#dSt').value, name: $('#dNm').value, employeeId: $('#dTy').value ? $('#dPe').value : '' });
-        el.querySelector('.p').innerHTML = '<div class="of-eye">' + esc(r.store) + '</div><h3>Setup code</h3><div class="of-code">' + esc(r.code) + '</div><p class="lead">Enter it on the device within ' + esc(r.expires) + '. It works once.</p><div class="acts"><button class="of-btn" data-done>Done</button></div>';
+        el.querySelector('.p').innerHTML = '<div class="of-eye">' + esc(r.store) + '</div><h3>iPad code</h3><div class="of-code">' + esc(r.code) + '</div><p class="lead">Enter it on the device within ' + esc(r.expires) + '. It works once.</p><div class="acts"><button class="of-btn" data-done>Done</button></div>';
         el.querySelector('[data-done]').onclick = () => { closeLayer(); officeLoad(); };
       }
     });
@@ -560,6 +620,13 @@ function renderDevices() {
 }
 
 officeLoad();
+/* Keeps itself current while it's on screen: refresh every 3 minutes, and the "Updated" time turns amber after 10. */
+setInterval(() => {
+  if (document.hidden || $('#layer').innerHTML) return;
+  if (OFF.loadedAt && Date.now() - OFF.loadedAt > 3 * 60000) officeLoad();
+}, 30000);
+setInterval(() => { const u = $('#offUpd'); if (u && OFF.loadedAt) u.classList.toggle('stale', Date.now() - OFF.loadedAt > 10 * 60000); }, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && OFF.loadedAt && Date.now() - OFF.loadedAt > 60000 && !$('#layer').innerHTML) officeLoad(); });
 </script>
 </body>
 </html>

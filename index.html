@@ -92,6 +92,16 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .msg.info{color:var(--lsilver)}
 .body .lead{color:var(--lsilver);font-size:16px;line-height:1.5;margin:-4px 0 18px}
 .tile.setpin{border-style:dashed;border-color:var(--silver)}
+.tile.away{border-color:rgba(227,182,107,.6)}.tile.away .st{color:var(--amber-d)}.tile.away .st i{background:var(--amber-d)}
+.tile .st{font-size:15px!important}
+.cam.sm{width:120px;height:120px;margin-bottom:14px}
+.phonebox{text-align:center;font-size:32px;font-weight:600;letter-spacing:.04em;border:1px solid var(--line-d);padding:14px;margin:0 auto 18px;max-width:360px;font-feature-settings:"tnum" 1}
+.pad.off button{opacity:.35}
+.pad button svg{vertical-align:middle}
+.ghost.strong{border-color:var(--silver);color:#fff;font-weight:600}
+.netbar{background:rgba(183,121,31,.16);border:1px solid var(--amber-d);color:var(--amber-d);padding:12px 16px;font-size:15px;margin-bottom:14px}
+#btnOther{color:#fff;font-size:17px;font-weight:600}
+.toast{top:auto!important;bottom:calc(28px + var(--sb))}
 .tile.setpin .st{color:var(--lsilver)}
 .tile.setpin .st i{background:transparent;outline:1px solid var(--silver)}
 .rej{display:block;width:100%;text-align:left;background:rgba(180,35,24,.16);border:1px solid var(--red-d);color:#fff;padding:16px 18px;font-size:16px;font-weight:600;margin-bottom:18px}
@@ -180,8 +190,8 @@ textarea.inp{min-height:90px;resize:vertical}
     <svg class="logo" viewBox="211 199 624 736" aria-label="Prime One"><path fill="#fff" fill-rule="evenodd" id="logoPath"/></svg>
     <div class="label">Time clock</div>
     <h1>Set up this device</h1>
-    <p>Enter the 6-digit setup code from the office (Juliana or Andre). This links this iPad or phone to one store. It only needs to be done once.</p>
-    <div class="field"><label class="label" for="setupCode">Setup code</label><input id="setupCode" class="inp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"></div>
+    <p>Enter the 6-digit iPad code from the office (Juliana or Andre). This links this iPad or phone to one store. It only needs to be done once.</p>
+    <div class="field"><label class="label" for="setupCode">iPad code</label><input id="setupCode" class="inp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"></div>
     <div class="field"><label class="label" for="setupName">Device name (optional)</label><input id="setupName" class="inp" maxlength="60" placeholder="e.g. Wendell iPad"></div>
     <button class="big" id="setupGo">Activate</button>
     <div class="msg" id="setupMsg"></div>
@@ -197,13 +207,14 @@ textarea.inp{min-height:90px;resize:vertical}
     <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
   </div>
   <div class="roster">
+    <div class="netbar hidden" id="netBar" role="status">No internet. Punches are saved on this iPad and sent when it’s back.</div>
     <button class="rej hidden" id="rejBar"></button>
     <h2>Tap your name</h2>
     <div class="tiles" id="tiles"></div>
     <div class="empty hidden" id="emptyRoster"></div>
   </div>
   <div class="bar">
-    <button id="btnOther"><svg viewBox="0 0 256 256"><path d="M92 92a36 36 0 1 1 52 32c-10 5-16 12-16 24v12" fill="none" stroke="currentColor" stroke-width="8"/><rect x="122" y="188" width="12" height="12" fill="currentColor"/></svg>Working here today?</button>
+    <button id="btnOther"><svg viewBox="0 0 256 256"><circle cx="108" cy="92" r="44" fill="none" stroke="currentColor" stroke-width="12"/><path d="M28 212c10-40 44-64 80-64s70 24 80 64" fill="none" stroke="currentColor" stroke-width="12"/><path d="M200 84v64M168 116h64" stroke="currentColor" stroke-width="12"/></svg>Not on the list? Working here today</button>
   </div>
 </section>
 
@@ -245,7 +256,8 @@ const LOGO_D = 'M373.3 204.0Q377.0 199.2 383.0 199.2L691.0 199.2Q697.0 199.2 701
 const IDLE_MS = 45000;
 const VERSION = '2.0.0';      // must match APP_VERSION in the backend
 let NEEDS_UPDATE = false;
-let ANCHOR = null;            // server clock at the last reply + a stopwatch (see punchClock)
+let ANCHOR = null;
+let NET_DOWN = false;            // server clock at the last reply + a stopwatch (see punchClock)
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -274,8 +286,8 @@ async function api(action, data) {
   if (res.appVersion && res.appVersion !== VERSION) NEEDS_UPDATE = true;
   if (res.serverMs) { ANCHOR = { server: res.serverMs, perf: performance.now() }; store.set('p1.skew', String(Date.now() - res.serverMs)); }
   if (!res.ok) {
-    if (res.error === 'DEVICE_NOT_SET_UP') { store.del('p1.device'); show('setup'); throw new Error('This device is not set up. Enter a setup code.'); }
-    throw new Error(res.error || 'Something went wrong.');
+    if (res.error === 'DEVICE_NOT_SET_UP') { store.del('p1.device'); show('setup'); throw Object.assign(new Error('This device is not set up. Enter an iPad code.'), { final: true }); }
+    throw Object.assign(new Error(res.error || 'Something went wrong.'), { final: !!res.final });
   }
   return res;
 }
@@ -334,10 +346,13 @@ $('#setupGo').onclick = async () => {
 const PIN_LEN = 6;
 let ROSTER = { people: [] };
 let STALE = false;
+/** "Text Juliana", with her number when the office has set it. */
+function textJuliana() { return 'Text Juliana' + (ROSTER.helpPhone ? ' at ' + ROSTER.helpPhone : ''); }
 function startKiosk() {
   show('kiosk'); tick();
   $('#storeName').textContent = store.get('p1.storeName') || 'Prime One';
   try { const c = JSON.parse(store.get('p1.roster') || 'null'); if (c && c.people) { ROSTER = c; renderTiles(); } } catch (e) {}
+  if (!(ROSTER.people || []).length) $('#emptyRoster').classList.remove('hidden'), $('#emptyRoster').innerHTML = '<span class="spin"></span><span class="spin"></span><span class="spin"></span> Loading this store’s list…';
   loadRoster(); flushQueue(); renderRejected();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   try { if (window.INTRO) INTRO.maybe(); } catch (e) {}
@@ -351,14 +366,22 @@ function takeRoster(r) {
   renderTiles();
 }
 async function loadRoster(quiet) {
-  try { takeRoster(await api('roster')); } catch (e) { if (!quiet) toast(e.message, 4000); }
+  try { takeRoster(await api('roster')); }
+  catch (e) {
+    if (!(ROSTER.people || []).length) {
+      $('#emptyRoster').classList.remove('hidden');
+      $('#emptyRoster').innerHTML = 'Couldn’t load this store’s list. ' + esc(e.message) + '<br><button class="ghost" style="width:auto;padding:16px 28px;margin-top:18px" id="rosterRetry">Try again</button>';
+      const b = $('#rosterRetry'); if (b) b.onclick = () => { $('#emptyRoster').innerHTML = '<span class="spin"></span> Loading…'; loadRoster(); };
+    } else if (!quiet && !isNetErr(e)) toast(e.message, 4000);
+  }
 }
-function initials(n) { return n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
+/* Amber strip whenever the last call couldn't reach Google. */
+function setNet(ok) { NET_DOWN = !ok; const b = $('#netBar'); if (b) b.classList.toggle('hidden', ok); }
 function isMgrRole(r) { return /manager|president|officer/i.test(r || ''); }
 function tileState(p) {
-  if (p.pin === 'locked') return { cls: 'nopin', st: 'PIN locked · text Juliana' };
+  if (p.pin === 'locked') return { cls: 'nopin', st: 'PIN locked · ' + textJuliana() };
   if (p.pin === 'none') return { cls: 'setpin', st: 'First time? Set up your PIN' };
-  if (p.elsewhere) return { cls: 'in', st: 'In at ' + p.elsewhere };
+  if (p.elsewhere) return { cls: 'away', st: 'Clocked in at ' + p.elsewhere + ' · tap to switch here' };
   if (p.status === 'in') return { cls: 'in', st: 'In since ' + p.sinceLabel };
   return { cls: '', st: 'Out' };
 }
@@ -374,19 +397,37 @@ function renderTiles() {
       '<div class="st"><i></i>' + esc(s.st) + '</div></button>';
   }).join('');
   $('#emptyRoster').classList.toggle('hidden', ppl.length > 0);
-  $('#emptyRoster').textContent = 'No one is set up to clock in at this store yet. Text Juliana.';
+  if (!ppl.length) $('#emptyRoster').textContent = 'No one is set up to clock in at this store yet. ' + textJuliana() + '.';
   $('#tiles').querySelectorAll('.tile').forEach(b => b.onclick = () => {
     const p = ppl.find(x => x.id === b.dataset.id);
+    const rec = RECENT[p.id];
+    if (rec && Date.now() - rec.at < 115000) return undoSheet(p, rec);
     if (p.pin === 'locked') return lockedSheet(p.name);
     if (p.pin === 'none') return setupSheet({ employeeId: p.id, title: p.name });
-    pinSheet({ employeeId: p.id, title: p.name });
+    pinSheet({ employeeId: p.id, title: p.name, label: p.elsewhere ? 'Switch to this store' : p.status === 'in' ? 'Clock out' : 'Clock in' });
   });
 }
-$('#btnOther').onclick = () => pinSheet({ byPhone: true, title: 'Working here today?', lead: 'Enter your cell number and your PIN. You’ll stay on this store’s list until midnight.' });
+$('#btnOther').onclick = () => phoneSheet();
 
 function lockedSheet(name) {
-  const el = openLayer('<div class="panel"><header><div><div class="label">PIN locked</div><h3>' + esc(name || 'Your PIN is locked') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body"><div class="status">Your PIN locked after too many wrong tries. Text Juliana. She can unlock it in a minute. Until then, you can’t clock in here.</div><button class="big" data-close>OK</button></div></div>');
+  const el = openLayer('<div class="panel"><header><div><div class="label">PIN locked</div><h3>' + esc(name || 'Your PIN is locked') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body"><div class="status">Your PIN locked after too many wrong tries. ' + esc(textJuliana()) + '. She can unlock it in a minute. Until then, you can’t clock in here.</div><button class="big" data-close>OK</button></div></div>');
   el.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeLayer());
+}
+
+/* "Not me? Undo" stays available for 2 minutes: tapping your tile again offers it, no PIN needed. */
+const RECENT = {};
+function undoSheet(p, rec) {
+  const el = openLayer('<div class="panel"><header><div><div class="label">Just now</div><h3>' + esc(p.name) + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body">' +
+    '<div class="status">You ' + (rec.type === 'IN' ? 'clocked in' : 'clocked out') + ' at ' + esc(rec.time) + '. Was that a mistake?</div>' +
+    '<div class="row2"><button class="ghost" style="margin:0" data-again>No, enter my PIN</button><button class="big out" data-undo>Undo that punch</button></div></div></div>');
+  el.querySelector('[data-close]').onclick = () => closeLayer();
+  el.querySelector('[data-again]').onclick = () => { delete RECENT[p.id]; renderTiles(); el.remove(); $('#tiles').querySelector('[data-id="' + p.id + '"]').click(); };
+  const u = el.querySelector('[data-undo]');
+  u.onclick = async () => {
+    u.disabled = true; u.innerHTML = '<span class="spin"></span>';
+    try { const res = await api('undo', { ticket: rec.ticket, punchId: rec.punchId }); delete RECENT[p.id]; takeRoster(res.roster); closeLayer(); toast('Punch undone'); }
+    catch (e) { toast(e.message, 4500); u.disabled = false; u.textContent = 'Undo that punch'; }
+  };
 }
 
 /* ---------------- camera ---------------- */
@@ -412,49 +453,70 @@ function snap() {
 }
 
 /* ---------------- keypad ----------------
-   One keypad for every step: PIN, setup code, choosing a PIN. cfg.onComplete(digits, ctx) runs on
-   the 6th digit; ctx.fail(msg) clears the dots and shows the message in place (camera stays on). */
+   One on-screen keypad for every step (PIN, codes, cell number), so the iPad keyboard never covers it.
+   cfg.onComplete(digits, ctx) runs when all digits are in; ctx.fail(msg) clears and shows the message;
+   ctx.wait(sec, left) locks the pad with a countdown. */
+const BACK = '<svg viewBox="0 0 256 256" width="30" height="30" aria-label="Delete"><path fill="none" stroke="currentColor" stroke-width="12" d="M88 56h128v144H88l-56-72Z"/><path stroke="currentColor" stroke-width="12" d="M120 100l56 56M176 100l-56 56"/></svg>';
+function fmtPhone(d) { return d.length < 4 ? d : d.length < 7 ? '(' + d.slice(0, 3) + ') ' + d.slice(3) : '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6); }
 function padSheet(cfg) {
+  const len = cfg.len || PIN_LEN, phone = cfg.kind === 'phone';
   const el = openLayer(
     '<div class="panel"><header><div><div class="label">' + esc(cfg.label || 'Enter your PIN') + '</div><h3>' + esc(cfg.title || '') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header>' +
     '<div class="body">' + (cfg.lead ? '<div class="lead">' + esc(cfg.lead) + '</div>' : '') +
-    (cfg.cam ? '<div class="cam"><video playsinline muted></video><div class="nocam">Starting camera…</div></div>' : '') +
-    (cfg.phone ? '<div class="field"><label class="label" for="pPhone">Cell number</label><input class="inp" id="pPhone" inputmode="tel" maxlength="14" placeholder="(000) 000-0000" value="' + esc(cfg.phoneVal || '') + '"></div>' : '') +
-    '<div class="dots" id="dots">' + '<span></span>'.repeat(PIN_LEN) + '</div>' +
+    (cfg.cam ? '<div class="cam' + (cfg.camSmall ? ' sm' : '') + '"><video playsinline muted></video><div class="nocam">Starting camera…</div></div>' : '') +
+    (phone ? '<div class="phonebox" id="dots" aria-live="polite">(___) ___-____</div>' : '<div class="dots" id="dots">' + '<span></span>'.repeat(len) + '</div>') +
     '<div class="pad">' + [1,2,3,4,5,6,7,8,9].map(n => '<button data-k="' + n + '">' + n + '</button>').join('') +
-    '<button class="fn" data-k="c">Clear</button><button data-k="0">0</button><button class="fn" data-k="b">Delete</button></div>' +
+    '<button class="fn" data-k="c">Clear all</button><button data-k="0">0</button><button class="fn" data-k="b">' + BACK + '</button></div>' +
     '<div class="msg" id="pMsg" role="alert">' + esc(cfg.error || '') + '</div></div></div>');
   el.querySelector('[data-close]').onclick = () => closeLayer();
   if (cfg.cam) startCam(el.querySelector('.cam')); else stopCam();
-  let pin = '', busy = false;
-  const draw = () => el.querySelectorAll('#dots span').forEach((s, i) => s.classList.toggle('on', i < pin.length));
+  let pin = '', busy = false, waitT = null;
+  const draw = () => {
+    if (phone) $('#dots').textContent = pin ? fmtPhone(pin) : '(___) ___-____';
+    else el.querySelectorAll('#dots span').forEach((s, i) => s.classList.toggle('on', i < pin.length));
+  };
+  const msg = (t, cls) => { const m = $('#pMsg'); if (m) { m.className = 'msg ' + (cls || ''); m.innerHTML = t; } };
   const ctx = {
-    phone: () => ($('#pPhone') || {}).value || '',
-    busy: t => { busy = true; $('#pMsg').className = 'msg info'; $('#pMsg').innerHTML = '<span class="spin"></span> ' + esc(t || 'Checking…'); },
+    busy: t => { busy = true; msg('<span class="spin"></span> ' + esc(t || 'Checking…'), 'info'); },
     fail: m => {
-      busy = false; pin = ''; draw(); $('#pMsg').className = 'msg'; $('#pMsg').textContent = m;
+      busy = false; pin = ''; draw(); msg(esc(m));
       const d = $('#dots'); if (d) { d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); }
+    },
+    wait: (sec, left) => {
+      busy = true; pin = ''; draw(); el.querySelector('.pad').classList.add('off');
+      let n = sec;
+      const step = () => {
+        if (!document.body.contains(el)) return clearInterval(waitT);
+        if (n <= 0) { clearInterval(waitT); busy = false; el.querySelector('.pad').classList.remove('off'); return msg('Try again. ' + left + (left === 1 ? ' try' : ' tries') + ' left before your PIN locks.'); }
+        msg('Too many wrong PINs. Wait 0:' + String(n).padStart(2, '0') + '. ' + left + (left === 1 ? ' try' : ' tries') + ' left before it locks.'); n--;
+      };
+      step(); waitT = setInterval(step, 1000);
     }
   };
   el.querySelectorAll('.pad button').forEach(b => b.onclick = () => {
     if (busy) return;
     const k = b.dataset.k;
-    if (k === 'c') pin = ''; else if (k === 'b') pin = pin.slice(0, -1); else if (pin.length < PIN_LEN) pin += k;
-    draw(); $('#pMsg').className = 'msg'; $('#pMsg').textContent = '';
-    if (pin.length === PIN_LEN) {
-      if (cfg.phone && digitsOf(ctx.phone()).length !== 10) return ctx.fail('Enter your 10-digit cell number first.');
-      cfg.onComplete(pin, ctx);
-    }
+    if (k === 'c') pin = ''; else if (k === 'b') pin = pin.slice(0, -1); else if (pin.length < len) pin += k;
+    draw(); msg('');
+    if (pin.length === len) cfg.onComplete(pin, ctx);
   });
   return el;
 }
 function digitsOf(v) { return String(v || '').replace(/\D/g, '').slice(-10); }
 
-/** Clock in or out. o: { employeeId | byPhone, title, lead, phoneVal, error } */
+/** Clock in or out. o: { employeeId | phone, title, label, lead, error } */
 function pinSheet(o) {
   padSheet({
-    label: 'Enter your PIN', title: o.title, lead: o.lead, cam: true, phone: !!o.byPhone, phoneVal: o.phoneVal, error: o.error,
-    onComplete: (pin, ctx) => submitPunch(o, pin, ctx, snap(), ctx.phone())
+    label: o.label || 'Enter your PIN', title: o.title, lead: o.lead, cam: true, camSmall: !!o.phone, error: o.error,
+    onComplete: (pin, ctx) => submitPunch(o, pin, ctx, snap())
+  });
+}
+/** "Not on the list?": cell number on the keypad first, then the PIN (with the camera). */
+function phoneSheet(err) {
+  padSheet({
+    kind: 'phone', len: 10, label: 'Working here today', title: 'Enter your cell number',
+    lead: 'You’ll be on this store’s list until midnight.', error: err,
+    onComplete: d => pinSheet({ phone: d, title: fmtPhone(d), label: 'Working here today · your PIN' })
   });
 }
 
@@ -465,22 +527,31 @@ function looksWeak(pin) {
   if (/^(\d\d)\1\1$/.test(pin) || /^(\d\d\d)\1$/.test(pin)) return 'Pick a PIN that isn’t a repeating pattern.';
   return '';
 }
-/** o: { employeeId | phone, title }. Setup code → choose PIN → confirm (photo) → saved → clocked in. */
+/** o: { employeeId | phone, title }. Code (checked right away) → choose PIN → confirm (photo) → saved → clocked in. */
 function setupSheet(o, step, err) {
   step = step || 1;
   const who = o.employeeId ? { employeeId: o.employeeId } : { phone: o.phone };
+  const name = o.title && !/^\(/.test(o.title) ? o.title : '';
   if (step === 1) return padSheet({
-    label: 'First time on the clock', title: o.title || 'Set up your PIN',
-    lead: 'Enter the setup code. Your manager has it. Next you’ll choose your own PIN.', error: err,
-    onComplete: code => { o.code = code; setupSheet(o, 2); }
+    label: 'First time on the clock', title: name ? 'Are you ' + name + '?' : 'Set up your PIN',
+    lead: (name ? 'If this isn’t you, tap ✕ and find your own name. ' : '') + 'Enter the setup code from your manager, or the code Juliana texted you.', error: err,
+    onComplete: async (code, ctx) => {
+      ctx.busy('Checking the code…');
+      try { const r = await api('checkCode', Object.assign({ setupCode: code }, who)); o.code = code; o.first = r.name; setupSheet(o, 2); }
+      catch (e) {
+        if (isNetErr(e)) return ctx.fail('No internet. Setting up a PIN needs the internet. Try again in a minute.');
+        if (/already have a PIN/i.test(e.message)) { closeLayer(); return toast(e.message, 6000); }
+        ctx.fail(friendly(e));
+      }
+    }
   });
   if (step === 2) return padSheet({
     label: 'Choose your PIN', title: 'Pick 6 numbers you’ll remember',
-    lead: 'This is your own PIN for the Prime One clock. Don’t share it. Nobody at Prime One can see it.', error: err,
+    lead: 'This is your own PIN for the Prime One clock. Don’t share it. Nobody at Prime One can see it. Forget it? ' + textJuliana() + ' to reset it.', error: err,
     onComplete: (pin, ctx) => { const w = looksWeak(pin); if (w) return ctx.fail(w); o.newPin = pin; setupSheet(o, 3); }
   });
   padSheet({
-    label: 'Confirm your PIN', title: 'Enter it again', cam: true,
+    label: 'Confirm your PIN', title: 'Enter it again', lead: 'This also clocks you in.', cam: true,
     onComplete: async (pin, ctx) => {
       if (pin !== o.newPin) return setupSheet(o, 2, 'Those didn’t match. Pick your PIN again.');
       const photo = snap();
@@ -488,95 +559,120 @@ function setupSheet(o, step, err) {
       try {
         await api('setPin', Object.assign({ setupCode: o.code, newPin: pin }, who));
       } catch (e) {
-        if (/setup code is not right|Too many wrong setup/i.test(e.message)) return setupSheet(o, 1, e.message);
-        if (/Pick |must be/i.test(e.message)) return setupSheet(o, 2, e.message);
+        if (/code is not right|Too many wrong codes/i.test(e.message)) return setupSheet(o, 1, e.message);
+        if (/^Pick |must be/i.test(e.message)) return setupSheet(o, 2, e.message);
         if (/already have a PIN/i.test(e.message)) { closeLayer(); return toast(e.message, 6000); }
-        return ctx.fail(isNetErr(e) ? 'No internet. Your PIN was not saved. Try again when the internet is back.' : e.message);
+        return ctx.fail(isNetErr(e) ? 'No internet. Your PIN was not saved. Try again when the internet is back.' : friendly(e));
       }
       toast('PIN saved. Remember it.', 3500);
-      submitPunch({ employeeId: o.employeeId, byPhone: !o.employeeId, phoneVal: o.phone, title: o.title }, pin, ctx, photo, o.phone);
+      submitPunch({ employeeId: o.employeeId, phone: o.phone, title: o.title }, pin, ctx, photo);
     }
   });
 }
 
 /* ---------------- clock in / out ----------------
-   The PIN is checked only by Google. The pad waits for the answer up to 3.5 seconds. If there's no
-   internet, or no answer in time, the punch is saved on this iPad with the time it was made and sent
-   later; it is checked when it arrives. */
+   The PIN is checked only by Google. With internet, the pad waits for the answer (up to 12 seconds on
+   a slow line), so a wrong PIN never looks like a punch. With no internet, the punch is saved on this
+   iPad with the time it was made, sent later, and checked when it arrives. */
 const isNetErr = e => /internet|reach the time clock/i.test(e.message || '');
+/** Server answers that mean "no": anything else (busy, Google hiccup) is retried, never dropped. */
+const isFinal = e => !!(e && e.final);
+function friendly(e) {
+  const m = String((e && e.message) || e || '');
+  if (m === 'NOT_ON_FILE') return 'That cell number isn’t on file for this clock. ' + textJuliana() + '.';
+  if (m === 'PIN_LOCKED') return 'Your PIN is locked. ' + textJuliana() + '.';
+  if (m === 'PIN_NOT_SET') return 'You haven’t set up a PIN yet.';
+  return m.replace(/^RETRY: /, '');
+}
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
 function stampMs(st) { const m = String(st || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]).getTime() : 0; }
 function nowLabel() { return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
-function msLabel(ms) { return new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+function msLabel(ms) { const d = new Date(ms); return isNaN(d) ? '' : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
 
 /**
  * When this punch happened. ANCHOR is the server's clock at the last reply plus a stopwatch
  * (performance.now) that changing the iPad's clock setting doesn't affect. If the stopwatch and the
- * iPad's clock agree, the time is "anchored" (trusted). If not, or the app restarted since the
- * last reply, the iPad's clock is used and the server marks the punch for Juliana to check.
+ * iPad's clock agree, the time is "anchored". If not, or the app restarted since the last reply,
+ * the iPad's clock is used and the server marks the punch for Juliana to check.
  */
 function punchClock() {
   const skew = Number(store.get('p1.skew') || 0);
   const devMs = Date.now() - skew;
   if (ANCHOR) {
     const est = ANCHOR.server + (performance.now() - ANCHOR.perf);
-    if (Math.abs(est - devMs) < 120000) return { ms: Math.round(est), source: 'anchored' };
+    if (Math.abs(est - devMs) < 60000) return { ms: Math.round(est), source: 'anchored' };
   }
   return { ms: Math.round(devMs), source: 'device' };
 }
 
-function submitPunch(o, pin, ctx, photo, phone) {
+function submitPunch(o, pin, ctx, photo) {
   const p = (ROSTER.people || []).find(x => x.id === o.employeeId);
   const job = {
     cid: uid(), pin, photo, at: punchClock(),
-    who: { employeeId: o.employeeId || '', phone: o.employeeId ? '' : phone || '' },
+    who: { employeeId: o.employeeId || '', phone: o.employeeId ? '' : o.phone || '' },
     name: p ? p.name.split(' ')[0] : '', guess: p ? (p.status === 'in' && !p.elsewhere ? 'OUT' : 'IN') : ''
   };
   ctx.busy('Checking…');
   runJob(o, job, {}, ctx);
 }
 function payload(job, flags) {
-  return Object.assign({ pin: job.pin, photo: job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source }, job.who, flags || {});
+  return Object.assign({ pin: job.pin, photo: job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess }, job.who, flags || {});
 }
 const INFLIGHT = {};
 async function runJob(o, job, flags, ctx) {
+  if (navigator.onLine === false) { await qPut(job); setNet(false); return savedOffline(job); }
   const req = api('clock', payload(job, flags));
   INFLIGHT[job.cid] = true;
   req.then(() => delete INFLIGHT[job.cid], () => delete INFLIGHT[job.cid]);
+  const slowNote = setTimeout(() => ctx.busy('Still checking… slow internet'), 3500);
   let r;
-  try { r = await Promise.race([req, new Promise(ok => setTimeout(() => ok('SLOW'), 3500))]); }
-  catch (e) { return punchError(o, job, e, ctx); }
+  try { r = await Promise.race([req, new Promise(ok => setTimeout(() => ok('SLOW'), 12000))]); }
+  catch (e) { clearTimeout(slowNote); return punchError(o, job, e, ctx); }
+  finally { clearTimeout(slowNote); }
   if (r === 'SLOW') {
-    // Keep it safe on this iPad now; if the slow answer still arrives, it takes the punch off the list.
+    // Keep a copy on this iPad. If the slow answer still arrives, it decides what happens.
     await qPut(job);
     savedOffline(job);
     req.then(res => {
-      if (res.confirm || res.switchStore) return;    // the saved copy sends it as-is later
-      qDel(job.cid); takeRoster(res.roster);
-      if (CUR_DONE === job.cid) { doneSheet({ cid: job.cid, type: res.type, name: res.fullName || res.name, time: res.time }); updateDone(res); }
-    }).catch(e => { if (!isNetErr(e)) { qDel(job.cid); addRejected(job, e.message); } });
+      qDel(job.cid);
+      if (res.confirm || res.switchStore) { if (!$('#layer').innerHTML || CUR_DONE === job.cid) punchResult(o, job, res); return; }
+      punchResult(o, job, res, CUR_DONE !== job.cid);
+    }).catch(e => {
+      if (isNetErr(e) || !isFinal(e)) return;            // the saved copy is retried later
+      qDel(job.cid);
+      if (CUR_DONE === job.cid) { CUR_DONE = ''; return pinSheet(Object.assign({}, o, { error: friendly(e) })); }
+      addRejected(job, e.message);
+    });
     return;
   }
   punchResult(o, job, r);
 }
-function punchResult(o, job, r) {
+function punchResult(o, job, r, quiet) {
   if (r.confirm) return confirmSheet('Clock out?', 'You clocked in at ' + r.sinceLabel, 'That was only a few minutes ago. End your shift now?', 'No, keep me in', 'Yes, clock out', () => resend(o, job, { confirm: true }));
-  if (r.switchStore) return confirmSheet('Another store', 'Still clocked in at ' + r.otherStore, 'You’re clocked in at ' + r.otherStore + ' since ' + r.sinceLabel + '. Clock out there and in here?', 'Cancel', 'Yes, switch to here', () => resend(o, job, { switchStore: true, confirm: true }));
-  takeRoster(r.roster);
+  if (r.switchStore) return confirmSheet('Another store', 'Clocked in at ' + r.otherStore, 'You’ve been clocked in at ' + r.otherStore + ' since ' + r.sinceLabel + '. Clock out there and in here?', 'Don’t clock in', 'Yes, switch to here', () => resend(o, job, { switchStore: true, confirm: true }));
+  takeRoster(r.roster); setNet(true);
+  if (r.ticket && r.employeeId) RECENT[r.employeeId] = { ticket: r.ticket, punchId: r.punchId, type: r.type, time: r.time, at: Date.now() };
+  if (quiet) return;
   doneSheet({ cid: job.cid, type: r.type, name: r.fullName || r.name, time: r.time });
   updateDone(r);
 }
 function resend(o, job, flags) {
-  const el = openLayer('<div class="panel"><div class="body" style="text-align:center;padding:48px 28px"><span class="spin"></span><span class="spin"></span><span class="spin"></span><div class="status" style="margin-top:18px">Saving…</div></div></div>');
-  const ctx = { busy() {}, fail: m => { closeLayer(); toast(m, 5000); } };
+  openLayer('<div class="panel"><div class="body" style="text-align:center;padding:48px 28px"><span class="spin"></span><span class="spin"></span><span class="spin"></span><div class="status" style="margin-top:18px" id="pMsg">Saving…</div></div></div>');
+  const ctx = { busy(t) { const m = $('#pMsg'); if (m) m.textContent = t; }, fail: m => { closeLayer(); toast(m, 5000); }, wait() { closeLayer(); } };
   runJob(o, job, flags, ctx);
-  return el;
 }
 function punchError(o, job, e, ctx) {
-  if (isNetErr(e)) { qPut(job).then(() => savedOffline(job)); return; }
-  if (e.message === 'PIN_NOT_SET') return setupSheet({ employeeId: o.employeeId, phone: job.who.phone, title: o.title === 'Working here today?' ? 'Set up your PIN' : o.title });
+  if (isNetErr(e)) { setNet(false); qPut(job).then(() => savedOffline(job)); return; }
+  if (e.message === 'PIN_NOT_SET') return setupSheet({ employeeId: o.employeeId, phone: o.phone, title: o.employeeId ? o.title : '' });
   if (e.message === 'PIN_LOCKED') return lockedSheet(o.employeeId ? o.title : '');
-  ctx.fail(e.message);
+  const w = String(e.message).match(/^PIN_WAIT:(\d+):(\d+)/);
+  if (w) return ctx.wait(+w[1], +w[2]);
+  if (!isFinal(e)) {   // Google is busy or hiccuped: keep the punch and send it in a moment
+    qPut(job).then(() => { savedOffline(job); setDoneStatus('Saved on this iPad. Google was busy; it’s sent in a moment.', 'warn'); });
+    return;
+  }
+  if (e.message === 'NOT_ON_FILE' && o.phone) { closeLayer(); return phoneSheet(friendly(e)); }
+  ctx.fail(friendly(e));
 }
 function confirmSheet(label, title, text, noLabel, yesLabel, yes) {
   stopCam();
@@ -590,7 +686,7 @@ function confirmSheet(label, title, text, noLabel, yesLabel, yes) {
 function savedOffline(job) {
   const p = (ROSTER.people || []).find(x => x.id === job.who.employeeId);
   if (p && job.guess) { p.status = job.guess === 'IN' ? 'in' : 'out'; p.sinceLabel = msLabel(job.at.ms); p.elsewhere = ''; renderTiles(); }
-  doneSheet({ cid: job.cid, type: job.guess, name: job.name || 'Saved', time: msLabel(job.at.ms) });
+  doneSheet({ cid: job.cid, type: job.guess, name: job.name || ('Cell ending ' + digitsOf(job.who.phone).slice(-4)), time: msLabel(job.at.ms) });
   setDoneStatus('Saved on this iPad. Your PIN is checked when the internet is back.', 'warn');
 }
 
@@ -621,7 +717,13 @@ function idbDo(mode, fn) {
 }
 async function qAll() {
   const fromDb = (await idbDo('readonly', st => st.getAll())) || [];
-  const m = {}; fromDb.concat(lsQ()).forEach(j => { if (j && j.cid) m[j.cid] = j; });
+  const m = {};
+  fromDb.concat(lsQ()).forEach(j => {
+    if (!j || !j.cid) return;
+    if (typeof j.at === 'number') j.at = { ms: j.at, source: 'device' };   // saved by version 1
+    if (!/^[a-z0-9]{8,40}$/.test(j.cid)) j.cid = String(j.cid).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40).padEnd(8, '0');
+    m[j.cid] = j;
+  });
   return Object.values(m).sort((a, b) => a.at.ms - b.at.ms);
 }
 async function qPut(job) {
@@ -643,10 +745,11 @@ async function flushQueue() {
       if (INFLIGHT[job.cid]) continue;
       try {
         const r = await api('clock', payload(job, { queued: true, confirm: true }));
-        await qDel(job.cid);
+        await qDel(job.cid); setNet(true);
         if (r.roster) takeRoster(r.roster);
       } catch (e) {
-        if (isNetErr(e)) break;
+        if (isNetErr(e)) { setNet(false); break; }
+        if (!isFinal(e)) break;                       // busy or a Google hiccup: try again next round
         await qDel(job.cid); addRejected(job, e.message);
       }
     }
@@ -661,28 +764,38 @@ setInterval(flushQueue, 30000);
 window.addEventListener('online', flushQueue);
 
 /* A punch saved offline that Google later refused (wrong PIN, locked, no PIN). It stays on the screen
-   until someone taps "Got it", so the person learns their time was NOT recorded. */
+   until someone taps it away, so the person learns their time was NOT recorded. Juliana also sees it. */
 const RKEY = 'p1.rejected';
 function rejList() { try { return JSON.parse(localStorage.getItem(RKEY) || '[]').filter(r => Date.now() - r.saved < 3 * 86400000); } catch (e) { return []; } }
+function rejWhy(m) {
+  const t = String(m || '');
+  if (/^PIN_NOT_SET/.test(t)) return 'No PIN was set up yet, so this time was NOT recorded.';
+  if (/^PIN_LOCKED/.test(t)) return 'The PIN was locked, so this time was NOT recorded.';
+  if (/^PIN_WAIT|^Wrong PIN/.test(t)) return 'The PIN was wrong, so this time was NOT recorded.';
+  if (/^NOT_ON_FILE/.test(t)) return 'That cell number isn’t on file, so this time was NOT recorded.';
+  return 'This time was NOT recorded (' + friendly(t) + ').';
+}
 function addRejected(job, msg) {
-  const why = msg === 'PIN_NOT_SET' ? 'No PIN set up yet' : msg === 'PIN_LOCKED' ? 'PIN locked' : msg;
-  const l = rejList(); l.push({ cid: job.cid, name: job.name || 'Someone (cell ' + digitsOf(job.who.phone).slice(-4) + ')', type: job.guess, at: job.at.ms, why, saved: Date.now() });
+  const l = rejList(); l.push({ cid: job.cid, name: job.name || ('Cell ending ' + digitsOf(job.who.phone).slice(-4)), type: job.guess, at: job.at.ms, why: rejWhy(msg), saved: Date.now() });
   try { localStorage.setItem(RKEY, JSON.stringify(l)); } catch (e) {}
   renderRejected();
 }
 function renderRejected() {
   const l = rejList(), b = $('#rejBar');
   b.classList.toggle('hidden', !l.length);
-  b.textContent = l.length === 1 ? l[0].name + '’s ' + (l[0].type === 'OUT' ? 'clock-out' : 'punch') + ' at ' + msLabel(l[0].at) + ' was NOT saved · tap here' : l.length + ' punches were NOT saved · tap here';
+  b.textContent = l.length === 1 ? l[0].name + ': ' + (l[0].type === 'OUT' ? 'clock-out' : 'punch') + ' at ' + msLabel(l[0].at) + ' was NOT saved · tap here' : l.length + ' punches were NOT saved · tap here';
 }
 $('#rejBar').onclick = () => {
-  const l = rejList();
-  const el = openLayer('<div class="panel"><header><div><div class="label">Not saved</div><h3>' + (l.length === 1 ? 'This punch was not saved' : 'These punches were not saved') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body">' +
-    '<div class="status">They were made while the internet was down, and Google refused them when they were sent. Text Juliana the time you started or stopped, so she can add it.</div>' +
-    '<div class="list">' + l.map(r => '<div class="item"><div class="a">' + esc(r.name) + ' · ' + (r.type === 'OUT' ? 'Clock out' : r.type === 'IN' ? 'Clock in' : 'Punch') + ' ' + esc(msLabel(r.at)) + ' ' + esc(new Date(r.at).toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })) + '</div><div class="b">' + esc(r.why) + '</div></div>').join('') + '</div>' +
-    '<button class="big" data-ok style="margin-top:22px">Got it</button></div></div>');
-  el.querySelector('[data-close]').onclick = () => closeLayer();
-  el.querySelector('[data-ok]').onclick = () => { try { localStorage.setItem(RKEY, '[]'); } catch (e) {} renderRejected(); closeLayer(); };
+  const draw = () => {
+    const l = rejList();
+    if (!l.length) { closeLayer(); return renderRejected(); }
+    const el = openLayer('<div class="panel"><header><div><div class="label">Not saved</div><h3>' + (l.length === 1 ? 'This punch was not saved' : 'These punches were not saved') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body">' +
+      '<div class="status">They were made while the internet was down, and were turned down when they were sent. ' + esc(textJuliana()) + ' the time you started or stopped, so she can add it.</div>' +
+      '<div class="list">' + l.map(r => '<div class="item"><div class="a">' + esc(r.name) + ' · ' + (r.type === 'OUT' ? 'Clock out' : r.type === 'IN' ? 'Clock in' : 'Punch') + ' ' + esc(msLabel(r.at)) + ' ' + esc(new Date(r.at).toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })) + '</div><div class="b">' + esc(r.why) + '</div><div class="acts"><button class="ok" data-ok="' + esc(r.cid) + '">I’ll text Juliana · remove</button></div></div>').join('') + '</div></div></div>');
+    el.querySelector('[data-close]').onclick = () => closeLayer();
+    el.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { try { localStorage.setItem(RKEY, JSON.stringify(rejList().filter(r => r.cid !== b.dataset.ok))); } catch (e) {} renderRejected(); draw(); });
+  };
+  draw();
 };
 
 let CUR_DONE = '', doneT;
@@ -693,7 +806,7 @@ function doneSheet(p) {
   const isIn = p.type === 'IN', isOut = p.type === 'OUT';
   const el = openLayer('<div class="panel"><div class="done ' + (isIn ? 'is-in' : isOut ? 'is-out' : '') + '">' + ICON.check +
     '<div class="label" style="margin-top:18px" id="dEye">' + (isIn ? 'Start of shift' : isOut ? 'End of shift' : 'Time clock') + '</div>' +
-    '<div class="big-io" id="dTitle">' + (isIn ? 'IN' : isOut ? 'OUT' : 'SAVED') + '</div><div class="who" id="dWho">' + esc(p.name || '') + '</div><div class="when" id="dWhen">' + (p.type ? (isIn ? 'Clocked in at ' : 'Clocked out at ') + esc(p.time) : 'At ' + esc(p.time)) + '</div>' +
+    '<div class="big-io" id="dTitle">' + (isIn ? 'IN' : isOut ? 'OUT' : 'SAVED') + '</div><div class="who" id="dWho">' + esc(p.name || '') + '</div><div class="when" id="dWhen">' + (p.type ? (isIn ? 'Clocked in at ' : 'Clocked out at ') + esc(p.time) : 'Punch saved at ' + esc(p.time)) + '</div>' +
     '<p id="dExtra" style="min-height:26px"></p>' +
     '<div class="save ok" id="dSave">Saved</div>' +
     '<div id="dActs" style="min-height:62px"></div></div></div>', 'sheet full');
@@ -709,13 +822,13 @@ function updateDone(r) {
   const x = document.getElementById('dExtra'); if (x) x.innerHTML = extra.join('<br>');
   setDoneStatus('Saved', 'ok');
   const acts = $('#dActs'); if (!acts || !r.ticket) return;
-  acts.innerHTML = (r.openWarning ? '<div class="warn" style="text-align:left;margin-top:18px">Your clock-in on ' + esc(r.openWarning) + ' has no clock-out. Text Juliana the time you left.</div>' : '') +
-    '<button class="ghost" data-undo style="margin-top:14px">Not me? Undo</button>';
-  if (r.openWarning) { clearTimeout(doneT); doneT = setTimeout(() => { if (CUR_DONE === r.cid || CUR_DONE) { CUR_DONE = ''; closeLayer(); } }, 15000); }
+  acts.innerHTML = (r.openWarning ? '<div class="warn" style="text-align:left;margin-top:18px">Your clock-in on ' + esc(r.openWarning) + ' has no clock-out. ' + esc(textJuliana()) + ' the time you left.</div>' : '') +
+    '<button class="ghost strong" data-undo style="margin-top:14px">Not me? Undo</button>';
+  if (r.openWarning) { clearTimeout(doneT); doneT = setTimeout(() => { if (CUR_DONE) { CUR_DONE = ''; closeLayer(); } }, 15000); }
   const u = acts.querySelector('[data-undo]');
   u.onclick = async () => {
     clearTimeout(doneT); u.disabled = true; u.innerHTML = '<span class="spin"></span>';
-    try { const res = await api('undo', { ticket: r.ticket, punchId: r.punchId }); takeRoster(res.roster); toast('Punch undone'); CUR_DONE = ''; closeLayer(); }
+    try { const res = await api('undo', { ticket: r.ticket, punchId: r.punchId }); delete RECENT[r.employeeId]; takeRoster(res.roster); toast('Punch undone'); CUR_DONE = ''; closeLayer(); }
     catch (e) { toast(e.message, 4000); u.disabled = false; u.textContent = 'Not me? Undo'; }
   };
 }
