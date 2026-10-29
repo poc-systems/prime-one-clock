@@ -88,7 +88,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .pad button{height:72px;border:1px solid var(--line-d);font-size:28px;font-weight:500}
 .pad button:active{background:var(--navy)}
 .pad button.fn{font-size:14px;color:var(--silver)}
-.msg{min-height:22px;text-align:center;color:var(--red-d);font-size:15px;margin:14px 0 0}
+.msg{min-height:22px;text-align:center;color:var(--red-d);font-size:15px;margin:14px 0 0;line-height:1.45}
+.msg.info{color:var(--lsilver)}
+.body .lead{color:var(--lsilver);font-size:16px;line-height:1.5;margin:-4px 0 18px}
+.tile.setpin{border-style:dashed;border-color:var(--silver)}
+.tile.setpin .st{color:var(--lsilver)}
+.tile.setpin .st i{background:transparent;outline:1px solid var(--silver)}
+.rej{display:block;width:100%;text-align:left;background:rgba(180,35,24,.16);border:1px solid var(--red-d);color:#fff;padding:16px 18px;font-size:16px;font-weight:600;margin-bottom:18px}
+.dots{gap:10px}.dots span{width:42px;height:54px}
+@media(max-width:420px){.dots{gap:7px}.dots span{width:34px;height:46px}.pad button{height:62px}}
 .field{margin-bottom:16px}
 .field label{display:block;margin-bottom:8px}
 .inp{width:100%;background:var(--deep);border:1px solid var(--line-d);color:#fff;padding:16px;font-size:18px;outline:none;border-radius:0;-webkit-appearance:none}
@@ -150,138 +158,6 @@ textarea.inp{min-height:90px;resize:vertical}
 .setup p{color:var(--lsilver);line-height:1.55;margin-bottom:26px}
 .link{color:var(--silver);text-decoration:underline;text-underline-offset:4px;margin-top:26px;font-size:15px}
 
-/* ---------- office (brand: white, mist, hairlines, navy, Michroma labels) ---------- */
-.office{background:#fff;color:var(--navy)}
-.office .label,.of-eye{font-family:var(--label);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--steel)}
-.of-top{background:var(--deep);color:#fff;display:flex;align-items:center;gap:16px;padding:14px 28px}
-.of-top svg{width:22px;height:26px;flex:none}
-.of-top .of-eye{color:var(--silver)}
-.of-top b{display:block;font-size:15px;font-weight:600;margin-top:3px}
-.of-sp{flex:1}
-.of-upd{font-size:12px;color:var(--silver);white-space:nowrap}
-.of-tbtn{color:var(--lsilver);font-size:14px;padding:10px 14px;border:1px solid var(--line-d);min-height:40px;display:inline-flex;align-items:center;gap:8px}
-.of-tbtn svg{width:16px;height:16px}
-.of-tbtn:hover{border-color:var(--silver);color:#fff}
-.of-nav{display:flex;gap:6px;padding:0 20px;border-bottom:1px solid var(--hair);background:#fff;overflow-x:auto;flex:none}
-.of-nav button{padding:17px 12px 15px;font-size:15px;font-weight:500;color:var(--steel);border-bottom:2px solid transparent;white-space:nowrap}
-.of-nav button.on{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
-.of-nav .n{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;color:#fff;background:var(--navy);padding:2px 7px;vertical-align:1px}
-.of-main{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#fff}
-.of-wrap{max-width:1120px;margin:0 auto;padding:30px 28px 70px}
-.of-h1{font-size:28px;font-weight:600;letter-spacing:-.01em;margin:8px 0 24px;line-height:1.15}
-.of-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);margin-bottom:38px;clip-path:polygon(0 0,100% 0,100% calc(100% - 24px),calc(100% - 24px) 100%,0 100%)}
-.cut{clip-path:polygon(0 0,100% 0,100% calc(100% - 24px),calc(100% - 24px) 100%,0 100%)}
-.of-kpis.five{grid-template-columns:repeat(5,1fr)}
-.of-kpi{background:var(--mist);padding:18px 20px 22px;text-align:left;min-width:0}
-.of-kpi .v{font-size:40px;font-weight:600;letter-spacing:-.02em;line-height:1;margin-top:14px;font-feature-settings:"tnum" 1}
-.of-kpi .v small{font-size:18px;color:var(--steel);font-weight:500}
-.of-kpi .s{font-size:13px;color:var(--steel);margin-top:8px}
-.of-kpi.amber .v{color:var(--amber)}.of-kpi.red .v{color:var(--red)}.of-kpi.green .v{color:var(--green)}
-button.of-kpi{cursor:pointer}button.of-kpi:hover{box-shadow:inset 0 -2px 0 var(--navy)}
-.of-sec{margin:0 0 40px}
-.of-sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--navy);padding-bottom:10px}
-.of-sec-h h2{font-size:18px;font-weight:600}
-.of-sec-h span{font-size:13px;color:var(--steel)}
-.of-row{display:flex;align-items:center;gap:16px;padding:16px 6px;border-bottom:1px solid var(--hair);width:100%;text-align:left;min-height:64px}
-button.of-row:hover{background:var(--mist)}
-.of-mark{width:8px;height:8px;flex:none;background:var(--hair);outline:1px solid #D5D9E0}
-.of-mark.in,.of-mark.green{background:var(--green)}.of-mark.amber{background:var(--amber)}.of-mark.red{background:var(--red)}.of-mark.navy{background:var(--navy)}
-.of-row .nm{font-weight:600;font-size:16px}
-.of-row .sub{font-size:13px;color:var(--steel);margin-top:3px}
-.of-row .rt{margin-left:auto;text-align:right;font-size:13px;color:var(--steel);flex:none;max-width:55%}
-.of-row .rt b{display:block;font-size:15px;color:var(--navy);font-weight:600}
-.of-row .of-big{font-size:24px;font-weight:600;color:var(--navy);font-feature-settings:"tnum" 1}
-.of-ok{display:flex;align-items:center;gap:12px;padding:20px 6px;color:var(--steel);border-bottom:1px solid var(--hair)}
-.of-stores{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;margin-top:18px}
-.of-store{border:1px solid var(--hair);padding:18px 20px 12px}
-.of-store h3{font-size:16px;font-weight:600}
-.of-store .cnt{font-size:13px;color:var(--steel);margin-top:4px}
-.of-store ul{list-style:none;margin-top:12px}
-.of-store li{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 0;border-top:1px solid var(--hair)}
-.of-store li .t{margin-left:auto;color:var(--steel);font-size:13px;text-align:right}
-.of-tag{display:inline-block;font-size:12px;padding:3px 8px;border:1px solid var(--hair);color:var(--steel);margin:6px 6px 0 0;white-space:nowrap}
-.of-tag.amber{border-color:var(--amber);color:#8A5A12}.of-tag.red{border-color:var(--red);color:var(--red)}.of-tag.green{border-color:var(--green);color:var(--green)}.of-tag.navy{border-color:var(--navy);color:var(--navy)}
-.of-btn{background:var(--navy);color:#fff;padding:11px 18px;font-size:14px;font-weight:600;border:1px solid var(--navy);min-height:44px}
-.of-btn:hover{background:var(--deep)}
-.of-btn.alt{background:#fff;color:var(--navy);border-color:var(--hair)}
-.of-btn.alt:hover{border-color:var(--navy)}
-.of-btn.red{background:#fff;color:var(--red);border-color:#EFC5C1}
-.of-btn[disabled]{opacity:.5}
-.of-inp{border:1px solid var(--hair);background:#fff;padding:10px 12px;font-size:15px;color:var(--navy);min-height:44px;border-radius:0;-webkit-appearance:none;min-width:0}
-.of-inp:focus{outline:none;border-color:var(--navy)}
-select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%23242D3C' d='M210.83 98.83l-80 80a4 4 0 0 1-5.66 0l-80-80a4 4 0 0 1 5.66-5.66L128 170.34l77.17-77.17a4 4 0 1 1 5.66 5.66Z'/%3E%3C/svg%3E") no-repeat right 12px center/16px}
-.of-inp.err{border-color:var(--red)}
-.of-err{color:var(--red);font-size:13px;margin-top:6px;min-height:0}
-.of-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px}
-.of-step{display:flex;align-items:center;border:1px solid var(--hair);min-height:44px}
-.of-step button{width:44px;height:44px;color:var(--navy);display:flex;align-items:center;justify-content:center}.of-step button svg{width:18px;height:18px}.of-step button[disabled]{color:var(--hair);cursor:default}
-.of-step button:hover{background:var(--mist)}
-.of-step div{padding:0 12px;font-weight:600;font-size:14px;white-space:nowrap;border-left:1px solid var(--hair);border-right:1px solid var(--hair);line-height:44px}
-.of-toggle{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--steel);min-height:44px;padding:0 14px;border:1px solid var(--hair)}
-.of-toggle i{width:14px;height:14px;border:1px solid var(--steel);display:inline-block}
-.of-toggle.on{color:var(--navy);border-color:var(--navy)}.of-toggle.on i{background:var(--navy);border-color:var(--navy)}
-.of-fix{border:1px solid var(--hair);padding:20px 22px;margin-top:14px}
-.of-fix h3{font-size:18px;font-weight:600;margin-top:8px}
-.of-fix .meta{font-size:14px;color:var(--steel);margin-top:6px;line-height:1.6}
-.of-fix .why{border-left:2px solid var(--silver);padding:2px 0 2px 12px;margin:14px 0 0;font-size:15px}
-.of-fix .acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--hair)}
-.of-person{border-bottom:1px solid var(--hair)}
-.of-days{background:var(--mist);border-top:1px solid var(--hair)}
-.of-day{display:grid;grid-template-columns:120px 1fr 90px;gap:12px;align-items:start;padding:14px 18px;border-top:1px solid #E9EBEF}
-.of-day:first-child{border-top:0}
-.of-day{border-top-color:var(--hair)}
-.of-zero{padding:16px 6px;color:var(--steel);font-size:14px;border-bottom:1px solid var(--hair)}
-.of-dec{font-size:13px;color:var(--steel);font-weight:500;display:block;margin-top:2px}
-.of-day .d b{display:block;font-size:14px}.of-day .d span{font-size:12px;color:var(--steel)}
-.of-day .h{text-align:right;font-weight:600;font-size:15px;font-feature-settings:"tnum" 1;padding-top:10px}
-.of-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid var(--hair);background:#fff;font-size:14px;margin:0 6px 6px 0;color:var(--navy)}
-.of-chip:hover{border-color:var(--navy)}
-.of-chip i{font-style:normal;font-size:12px;font-weight:500;color:var(--steel)}
-.of-chip.v{text-decoration:line-through;color:var(--steel)}.of-chip.fx{box-shadow:inset 3px 0 0 var(--steel)}.of-chip.np{border-color:var(--red)}
-.of-chip .ed{font-size:11px;color:var(--steel)}.of-chip .np{font-size:11px;color:var(--red);font-weight:600}
-.of-add{font-size:13px;color:var(--steel);min-height:44px;padding:8px 6px;margin:0 6px 6px 0;display:inline-flex;align-items:center;gap:6px}
-.of-add svg{width:14px;height:14px}
-.of-add:hover{color:var(--navy);text-decoration:underline}
-.of-flags{margin-top:2px}
-.of-empty{padding:48px 0;color:var(--steel);text-align:center;font-size:15px}
-.of-skel{background:var(--mist);animation:pulse 1.6s ease-in-out infinite;height:18px;margin:16px 0}
-.of-dr{position:fixed;inset:0;background:rgba(22,28,39,.38);display:flex;justify-content:flex-end;z-index:30;animation:fade .4s}
-.of-dr .p{background:#fff;color:var(--navy);width:min(460px,100%);height:100%;overflow:auto;padding:28px 28px 40px;animation:slide .45s ease}
-@keyframes slide{from{transform:translateX(24px);opacity:0}}
-.of-dr h3{font-size:22px;font-weight:600;margin:8px 0 6px}
-.of-dr .lead{color:var(--steel);font-size:14px;margin-bottom:22px;line-height:1.5}
-.of-dr .f{margin-bottom:16px}
-.of-dr .f label{display:block;margin-bottom:8px}
-.of-dr .f .of-inp{width:100%}
-.of-dr .acts{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
-.of-dr .acts>*{flex:1}
-.of-dr .x{color:var(--steel);float:right;margin:-6px -8px 0 0}
-.of-code{font-size:52px;font-weight:600;letter-spacing:.14em;margin:14px 0 8px;font-feature-settings:"tnum" 1}
-.osign{background:var(--mist);color:var(--navy)}
-.osign .card{background:#fff;width:min(420px,100%);padding:36px 32px 32px;margin:auto}
-.osign .card svg{width:34px;height:40px}
-.osign h1{font-size:26px;font-weight:600;margin:18px 0 6px}
-.osign p{color:var(--steel);font-size:14px;line-height:1.55;margin-bottom:22px}
-.osign .f{margin-bottom:16px}.osign .f label{display:block;margin-bottom:8px}.osign .of-inp{width:100%;font-size:17px}
-.osign .of-btn{width:100%;margin-top:6px;min-height:52px;font-size:16px}
-.osign .of-err{text-align:left;margin-top:12px;font-size:14px}
-.of-photo{display:block;width:120px;height:120px;object-fit:cover;border:1px solid var(--hair);margin:4px 0 18px}
-@media(max-width:760px){
-  .of-kpis,.of-kpis.five{grid-template-columns:1fr 1fr}
-  .of-kpi{padding:12px 14px 14px}.of-kpi .v{font-size:26px;margin-top:8px}.of-kpi .s{display:none}.of-kpi.zero{display:none}
-  .of-kpis{margin-bottom:26px}
-  .of-fix .acts .of-inp{flex:1 1 100%}.of-fix .acts .of-sp{display:none}.of-fix .acts .of-btn{flex:1}
-  .of-wrap{padding:22px 16px 60px}
-  .of-top{padding:12px 16px;gap:10px}.of-upd{display:none}.of-top .of-who{display:none}.of-top .of-eye{font-size:10px;letter-spacing:.14em}.of-tbtn{padding:8px 10px;font-size:13px}.of-tbtn span{display:none}
-
-  .of-nav{padding:0 8px}
-  .of-h1{font-size:24px}
-  .of-day{grid-template-columns:64px 1fr;padding:14px 12px}.of-day .h{grid-column:2;text-align:left;padding-top:0}
-  .of-dr{align-items:flex-end}.of-dr .p{height:auto;max-height:90%;width:100%}
-  .of-row .rt{max-width:50%}
-  .of-bar .of-inp{flex:1 1 100%}
-}
-
 @media(max-width:600px){
   .top{padding:16px 18px 14px;gap:12px}.clock .t{font-size:24px}.clock .d{display:none}.top .store .name{font-size:16px;white-space:normal}.roster{padding:18px}
   .tiles{grid-template-columns:1fr 1fr;gap:10px}.tile{min-height:112px;padding:16px 14px}.tile .nm{font-size:17px}
@@ -300,12 +176,11 @@ select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg 
 
 <!-- ============ SETUP ============ -->
 <section id="setup" class="screen hidden">
-  <button class="ghost" id="toOffice2" style="position:absolute;top:calc(16px + var(--st));right:16px;width:auto;margin:0;padding:12px 18px;z-index:2">Office sign in</button>
   <div class="center"><div class="setup">
     <svg class="logo" viewBox="211 199 624 736" aria-label="Prime One"><path fill="#fff" fill-rule="evenodd" id="logoPath"/></svg>
     <div class="label">Time clock</div>
     <h1>Set up this device</h1>
-    <p>Enter the 6-digit setup code from the office. This links this iPad or phone to one store. It only needs to be done once.</p>
+    <p>Enter the 6-digit setup code from the office (Juliana or Andre). This links this iPad or phone to one store. It only needs to be done once.</p>
     <div class="field"><label class="label" for="setupCode">Setup code</label><input id="setupCode" class="inp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"></div>
     <div class="field"><label class="label" for="setupName">Device name (optional)</label><input id="setupName" class="inp" maxlength="60" placeholder="e.g. Wendell iPad"></div>
     <button class="big" id="setupGo">Activate</button>
@@ -317,52 +192,19 @@ select.of-inp{padding-right:40px;background:#fff url("data:image/svg+xml,%3Csvg 
 <!-- ============ KIOSK ============ -->
 <section id="kiosk" class="screen hidden">
   <div class="top">
-    <svg class="mark" viewBox="285 195 515 580" id="markBtn"><path fill="#fff" id="markPath1"/></svg>
+    <svg class="mark" viewBox="285 195 515 580" aria-hidden="true"><path fill="#fff" id="markPath1"/></svg>
     <div class="store"><div class="label">Time clock</div><div class="name" id="storeName">Prime One</div><div class="qbadge hidden" id="qBadge"></div></div>
-    <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div><button class="olink" id="btnOffice">Office</button></div>
+    <div class="clock"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
   </div>
   <div class="roster">
+    <button class="rej hidden" id="rejBar"></button>
     <h2>Tap your name</h2>
     <div class="tiles" id="tiles"></div>
     <div class="empty hidden" id="emptyRoster"></div>
   </div>
   <div class="bar">
-    <button id="btnOther"><svg viewBox="0 0 256 256"><path d="M92 92a36 36 0 1 1 52 32c-10 5-16 12-16 24v12" fill="none" stroke="currentColor" stroke-width="8"/><rect x="122" y="188" width="12" height="12" fill="currentColor"/></svg>Not on the list?</button>
-    <button id="btnFix"><svg viewBox="0 0 256 256"><path fill="currentColor" d="M128 28a100 100 0 1 0 100 100A100.11 100.11 0 0 0 128 28Zm0 192a92 92 0 1 1 92-92 92.1 92.1 0 0 1-92 92Zm60-92a4 4 0 0 1-4 4h-56a4 4 0 0 1-4-4V72a4 4 0 0 1 8 0v52h52a4 4 0 0 1 4 4Z"/></svg>Fix a punch</button>
-    <button id="btnMgr"><svg viewBox="0 0 256 256"><path fill="currentColor" d="M208 44H48a12 12 0 0 0-12 12v56c0 54.65 26.65 87.86 49 106.15 24.28 19.87 48.17 26.62 49.17 26.9a3.94 3.94 0 0 0 2.12 0c1-.28 24.89-7 49.17-26.9C207.35 199.86 234 166.65 234 112V56a12 12 0 0 0-12-12Zm4 68c0 42.07-17.44 76-51.83 100.89A139.86 139.86 0 0 1 128 228.88a139.86 139.86 0 0 1-32.17-16C61.44 188 44 154.07 44 112V56a4 4 0 0 1 4-4h160a4 4 0 0 1 4 4Zm-38.83-12.83a4 4 0 0 1 0 5.66l-56 56a4 4 0 0 1-5.66 0l-24-24a4 4 0 0 1 5.66-5.66L114 152.34l53.17-53.17a4 4 0 0 1 5.66 0Z"/></svg>Manager</button>
+    <button id="btnOther"><svg viewBox="0 0 256 256"><path d="M92 92a36 36 0 1 1 52 32c-10 5-16 12-16 24v12" fill="none" stroke="currentColor" stroke-width="8"/><rect x="122" y="188" width="12" height="12" fill="currentColor"/></svg>Working here today?</button>
   </div>
-</section>
-
-<!-- ============ OFFICE ============ -->
-<section id="office" class="screen office hidden">
-  <div class="of-top">
-    <svg viewBox="285 195 515 580"><path fill="#fff" id="markPath2"/></svg>
-    <div><div class="of-eye">Operations · Time clock</div><b class="of-who" id="offWho"></b></div>
-    <span class="of-sp"></span>
-    <span class="of-upd" id="offUpd"></span>
-    <button class="of-tbtn" id="offRefresh">Refresh</button>
-    <button class="of-tbtn" id="offOut">Sign out</button>
-  </div>
-  <nav class="of-nav" id="offTabs">
-    <button data-t="today" class="on">Today</button>
-    <button data-t="fixes">Fixes<span class="n hidden" id="fixN"></span></button>
-    <button data-t="week">Timesheets</button>
-    <button data-t="devices">Devices</button>
-  </nav>
-  <main class="of-main" id="offBody"></main>
-</section>
-
-<section id="osign" class="screen osign hidden">
-  <div class="center"><div class="card cut">
-    <svg viewBox="285 195 515 580"><path fill="#242D3C" id="markPath3"/></svg>
-    <div class="of-eye" style="margin-top:14px">Operations · Time clock</div>
-    <h1>Office sign in</h1>
-    <p>For Juliana, Andre, Scott and Gelson. Use your cell number and your Prime One PIN.</p>
-    <div class="f"><label class="of-eye" for="sPhone">Cell number</label><input class="of-inp" id="sPhone" inputmode="tel" autocomplete="tel" placeholder="(000) 000-0000"></div>
-    <div class="f"><label class="of-eye" for="sPin">PIN</label><input class="of-inp" id="sPin" inputmode="numeric" type="password" maxlength="4" placeholder="4 digits"></div>
-    <button class="of-btn" id="sGo">Sign in</button>
-    <div class="of-err" id="sMsg"></div>
-  </div></div>
 </section>
 
 <div id="layer"></div>
@@ -401,8 +243,9 @@ const LOGO = document.getElementById('logoPath');
 const MARK_D = 'M373.3 204.0Q377.0 199.2 383.0 199.2L691.0 199.2Q697.0 199.2 701.4 203.3L791.6 285.9Q796.0 290.0 796.0 296.0L796.0 500.0Q796.0 505.0 791.0 505.0L400.5 505.0Q392.5 505.0 392.5 513.0L392.5 640.0Q392.5 648.0 387.3 654.1L290.4 769.2Q289.8 770.0 289.8 769.0L289.8 406.0Q289.8 405.0 290.5 405.7L388.3 498.3Q389.0 499.0 389.0 498.0L389.9 408.0Q390.0 401.0 397.0 401.0L685.0 401.0Q692.0 401.0 692.0 394.0L692.0 310.6Q692.0 303.6 685.0 303.6L298.0 303.6Q296.0 303.6 297.2 302.0Z';
 const LOGO_D = 'M373.3 204.0Q377.0 199.2 383.0 199.2L691.0 199.2Q697.0 199.2 701.4 203.3L791.6 285.9Q796.0 290.0 796.0 296.0L796.0 500.0Q796.0 505.0 791.0 505.0L400.5 505.0Q392.5 505.0 392.5 513.0L392.5 640.0Q392.5 648.0 387.3 654.1L290.4 769.2Q289.8 770.0 289.8 769.0L289.8 406.0Q289.8 405.0 290.5 405.7L388.3 498.3Q389.0 499.0 389.0 498.0L389.9 408.0Q390.0 401.0 397.0 401.0L685.0 401.0Q692.0 401.0 692.0 394.0L692.0 310.6Q692.0 303.6 685.0 303.6L298.0 303.6Q296.0 303.6 297.2 302.0ZM784.0 885.2L784.2 934.8L834.5 934.8L834.8 928.5L833.8 927.8L794.5 928.0L793.0 927.0L793.0 913.2L793.5 912.8L817.0 912.8L817.8 912.2L817.5 905.2L793.5 905.0L793.0 904.5L793.2 892.8L794.5 892.0L833.0 892.2L834.2 891.2L834.2 885.5L833.8 885.0ZM702.5 885.5L702.5 934.2L703.0 934.8L710.0 935.0L711.0 934.2L711.0 896.2L711.5 896.2L717.8 903.0L753.8 934.8L759.0 935.0L760.5 934.2L760.5 885.5L760.0 885.0L752.2 885.0L751.8 885.8L752.0 923.0L710.0 885.2L703.0 885.0ZM487.2 885.2L487.0 934.0L487.5 934.8L537.8 934.8L538.0 928.5L537.0 927.8L497.5 928.0L496.5 927.0L496.5 913.2L497.0 912.8L520.8 912.5L521.2 912.0L521.2 906.0L520.5 905.2L497.2 905.2L496.5 904.5L496.8 892.5L497.5 892.0L537.2 892.0L537.8 891.0L537.8 885.8L537.2 885.0ZM399.2 885.2L399.5 934.8L406.0 935.0L406.8 934.5L406.8 896.5L407.2 896.0L412.0 903.5L430.8 927.0L432.2 927.0L433.5 926.2L452.2 901.0L454.5 897.0L455.0 897.5L455.0 934.5L455.8 935.0L463.5 934.8L463.8 885.5L463.2 885.0L455.2 885.0L454.2 885.8L432.2 917.0L430.8 916.2L406.8 885.0ZM366.2 885.0L366.0 935.5L375.5 935.8L375.8 885.2ZM294.2 885.5L294.2 934.2L294.8 934.8L303.5 934.8L303.8 915.8L304.2 915.2L317.2 915.2L337.2 934.8L348.5 935.0L349.2 934.5L328.8 916.0L329.2 915.2L336.8 915.2L340.2 914.5L342.2 913.5L344.5 910.2L345.0 908.0L345.0 892.2L344.5 890.0L342.2 886.8L337.8 885.0L294.8 885.0ZM303.8 892.5L304.2 892.0L332.0 892.0L334.2 892.8L336.0 895.5L335.8 906.0L334.5 907.8L331.8 908.5L304.5 908.5L303.8 907.8ZM607.2 877.5L606.0 879.8L605.0 883.5L605.0 925.5L606.0 929.2L608.2 932.5L610.5 933.8L614.2 934.8L666.2 934.8L670.0 933.8L673.0 931.5L674.8 928.0L675.5 923.8L675.5 885.2L674.8 880.8L673.2 877.8L671.5 876.0L669.5 875.0L664.8 874.0L615.8 874.0L610.2 875.2ZM614.8 882.8L615.5 882.0L665.2 882.2L665.8 883.0L665.5 926.2L664.8 926.8L615.5 926.8L614.8 926.0ZM211.2 874.5L211.2 934.2L211.8 934.8L220.0 935.0L221.5 934.2L221.5 911.8L222.2 911.0L263.0 911.0L268.2 909.8L270.0 908.8L271.8 906.8L272.8 904.8L273.5 901.0L273.5 884.0L272.8 880.2L271.8 878.2L268.2 875.2L263.5 874.0L211.8 874.0ZM221.5 882.2L222.0 881.8L259.0 881.8L261.0 882.5L262.8 884.5L263.2 886.5L263.2 898.5L262.8 900.5L260.5 902.8L258.2 903.2L222.2 903.2L221.5 902.5Z';
 const IDLE_MS = 45000;
-const VERSION = '1.2.0';      // must match APP_VERSION in the backend
+const VERSION = '2.0.0';      // must match APP_VERSION in the backend
 let NEEDS_UPDATE = false;
+let ANCHOR = null;            // server clock at the last reply + a stopwatch (see punchClock)
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -429,6 +272,7 @@ async function api(action, data) {
     throw new Error(navigator.onLine === false ? 'No internet connection. Check the connection and try again.' : 'Could not reach the time clock. Try again.');
   }
   if (res.appVersion && res.appVersion !== VERSION) NEEDS_UPDATE = true;
+  if (res.serverMs) { ANCHOR = { server: res.serverMs, perf: performance.now() }; store.set('p1.skew', String(Date.now() - res.serverMs)); }
   if (!res.ok) {
     if (res.error === 'DEVICE_NOT_SET_UP') { store.del('p1.device'); show('setup'); throw new Error('This device is not set up. Enter a setup code.'); }
     throw new Error(res.error || 'Something went wrong.');
@@ -438,12 +282,11 @@ async function api(action, data) {
 
 /* ---------------- screens ---------------- */
 function show(id) {
-  ['setup','kiosk','office','osign'].forEach(s => $('#' + s).classList.toggle('hidden', s !== id));
+  ['setup','kiosk'].forEach(s => $('#' + s).classList.toggle('hidden', s !== id));
   closeLayer();
 }
 function toast(t, ms) {
   const el = document.createElement('div'); el.className = 'toast'; el.textContent = t;
-  if (!$('#office').classList.contains('hidden')) { el.style.background = '#242D3C'; el.style.color = '#fff'; }
   document.body.appendChild(el); setTimeout(() => el.remove(), ms || 2600);
 }
 function openLayer(html, cls) {
@@ -464,15 +307,12 @@ function tick() {
 }
 setInterval(tick, 1000);
 
-/* ---------------- idle reset ---------------- */
+/* ---------------- abandoned sheets ---------------- */
 let idleT;
 function bumpIdle() {
   clearTimeout(idleT);
-  idleT = setTimeout(() => { if (!$('#kiosk').classList.contains('hidden') && $('#layer').innerHTML) { closeLayer(); loadRoster(); } }, IDLE_MS);
-  clearTimeout(offIdleT);
-  if (store.get('p1.device')) offIdleT = setTimeout(() => { if (!$('#office').classList.contains('hidden')) { officeSignOut(); toast('Office signed out'); } }, 120000);
+  idleT = setTimeout(() => { if (!$('#kiosk').classList.contains('hidden') && $('#layer').innerHTML && !CUR_DONE) closeLayer(); }, IDLE_MS);
 }
-let offIdleT;
 ['touchstart','mousedown','keydown'].forEach(ev => document.addEventListener(ev, bumpIdle, { passive: true }));
 
 /* ---------------- setup ---------------- */
@@ -489,79 +329,64 @@ $('#setupGo').onclick = async () => {
   } catch (e) { $('#setupMsg').textContent = e.message; }
   $('#setupGo').disabled = false; $('#setupGo').textContent = 'Activate';
 };
-$('#toOffice2').onclick = () => officeLogin();
-$('#btnOffice').onclick = () => officeLogin();
 
 /* ---------------- kiosk ---------------- */
+const PIN_LEN = 6;
 let ROSTER = { people: [] };
-let rosterT;
+let STALE = false;
 function startKiosk() {
   show('kiosk'); tick();
   $('#storeName').textContent = store.get('p1.storeName') || 'Prime One';
   try { const c = JSON.parse(store.get('p1.roster') || 'null'); if (c && c.people) { ROSTER = c; renderTiles(); } } catch (e) {}
-  loadRoster(); flushQueue();
-  clearInterval(rosterT); rosterT = setInterval(() => { if (!$('#layer').innerHTML) loadRoster(true); }, 60000);
+  loadRoster(); flushQueue(); renderRejected();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   try { if (window.INTRO) INTRO.maybe(); } catch (e) {}
 }
+/** Every punch reply carries the store's fresh list, so the iPad never has to poll. */
+function takeRoster(r) {
+  if (!r || !r.people) return;
+  ROSTER = r; STALE = false;
+  store.set('p1.roster', JSON.stringify(r)); store.set('p1.storeName', r.storeName);
+  $('#storeName').textContent = r.storeName;
+  renderTiles();
+}
 async function loadRoster(quiet) {
-  try {
-    ROSTER = await api('roster');
-    store.set('p1.roster', JSON.stringify(ROSTER));
-    store.set('p1.storeName', ROSTER.storeName);
-    $('#storeName').textContent = ROSTER.storeName;
-    renderTiles();
-  } catch (e) { if (!quiet) toast(e.message, 4000); }
+  try { takeRoster(await api('roster')); } catch (e) { if (!quiet) toast(e.message, 4000); }
 }
 function initials(n) { return n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
 function isMgrRole(r) { return /manager|president|officer/i.test(r || ''); }
+function tileState(p) {
+  if (p.pin === 'locked') return { cls: 'nopin', st: 'PIN locked · text Juliana' };
+  if (p.pin === 'none') return { cls: 'setpin', st: 'First time? Set up your PIN' };
+  if (p.elsewhere) return { cls: 'in', st: 'In at ' + p.elsewhere };
+  if (p.status === 'in') return { cls: 'in', st: 'In since ' + p.sinceLabel };
+  return { cls: '', st: 'Out' };
+}
 function renderTiles() {
   const ppl = ROSTER.people || [];
   document.querySelector('.roster h2').textContent = ROSTER.personal ? 'This phone is set up for you' : 'Tap your name';
   $('#btnOther').classList.toggle('hidden', !!ROSTER.personal);
-  $('#tiles').innerHTML = ppl.map(p =>
-    '<button class="tile ' + (p.status === 'in' ? 'in ' : '') + (!p.pin ? 'nopin' : '') + '" data-id="' + esc(p.id) + '">' +
-      '<span><div class="nm">' + esc(p.name) + '</div>' + (isMgrRole(p.role) ? '<div class="role">Manager</div>' : '') + '</span>' +
-      '<div class="st"><i></i>' + (!p.pin ? 'No PIN yet · ask the office' : p.status === 'in' ? 'In since ' + esc(p.sinceLabel) : 'Out') + '</div>' +
-    '</button>').join('');
+  $('#tiles').innerHTML = ppl.map(p => {
+    const s = tileState(p);
+    const sub = p.visiting ? 'Visiting from ' + p.visiting : isMgrRole(p.role) ? 'Manager' : '';
+    return '<button class="tile ' + s.cls + '" data-id="' + esc(p.id) + '">' +
+      '<span><div class="nm">' + esc(p.name) + '</div>' + (sub ? '<div class="role">' + esc(sub) + '</div>' : '') + '</span>' +
+      '<div class="st"><i></i>' + esc(s.st) + '</div></button>';
+  }).join('');
   $('#emptyRoster').classList.toggle('hidden', ppl.length > 0);
-  $('#emptyRoster').textContent = 'No one is set up to clock in at this store yet. Ask the office.';
+  $('#emptyRoster').textContent = 'No one is set up to clock in at this store yet. Text Juliana.';
   $('#tiles').querySelectorAll('.tile').forEach(b => b.onclick = () => {
     const p = ppl.find(x => x.id === b.dataset.id);
-    if (!p.pin) return noPinSheet(p);
-    pinSheet({ employeeId: p.id, title: p.name, next: 'punch' });
+    if (p.pin === 'locked') return lockedSheet(p.name);
+    if (p.pin === 'none') return setupSheet({ employeeId: p.id, title: p.name });
+    pinSheet({ employeeId: p.id, title: p.name });
   });
 }
-$('#btnOffice').onclick = () => officeLogin();
-$('#btnOther').onclick = () => pinSheet({ byPhone: true, title: 'Clock in at this store', next: 'punch' });
-$('#btnFix').onclick = () => pickPerson('Fix a punch', 'Who needs a fix?', ROSTER.people, p => pinSheet({ employeeId: p.id, title: p.name, next: 'fix' }));
-$('#btnMgr').onclick = () => {
-  const mgrs = (ROSTER.people || []).filter(p => isMgrRole(p.role));
-  if (mgrs.length === 1) return pinSheet({ employeeId: mgrs[0].id, title: mgrs[0].name, next: 'mgr' });
-  pickPerson('Manager', 'Tap your name', mgrs, p => pinSheet({ employeeId: p.id, title: p.name, next: 'mgr' }), true);
-};
+$('#btnOther').onclick = () => pinSheet({ byPhone: true, title: 'Working here today?', lead: 'Enter your cell number and your PIN. You’ll stay on this store’s list until midnight.' });
 
-/* hidden office entry on the kiosk: hold the logo for 3 seconds */
-(() => {
-  let t; const m = $('#markBtn');
-  m.addEventListener('touchstart', () => { t = setTimeout(officeLogin, 3000); }, { passive: true });
-  m.addEventListener('mousedown', () => { t = setTimeout(officeLogin, 3000); });
-  ['touchend','mouseup','mouseleave'].forEach(ev => m.addEventListener(ev, () => clearTimeout(t)));
-})();
-
-function noPinSheet(p) {
-  const el = openLayer('<div class="panel"><header><div><div class="label">No PIN yet</div><h3>' + esc(p.name) + '</h3></div><button class="x" data-close>' + ICON.x + '</button></header><div class="body"><div class="status">You don’t have a PIN yet, so you can’t clock in here. Ask your manager or the office for your PIN. Until then, your manager can file a fix for your time.</div><button class="big" data-close>OK</button></div></div>');
+function lockedSheet(name) {
+  const el = openLayer('<div class="panel"><header><div><div class="label">PIN locked</div><h3>' + esc(name || 'Your PIN is locked') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body"><div class="status">Your PIN locked after too many wrong tries. Text Juliana. She can unlock it in a minute. Until then, you can’t clock in here.</div><button class="big" data-close>OK</button></div></div>');
   el.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeLayer());
-}
-function pickPerson(label, title, list, cb, allowPhone) {
-  const el = openLayer(
-    '<div class="panel"><header><div><div class="label">' + esc(label) + '</div><h3>' + esc(title) + '</h3></div><button class="x" data-close>' + ICON.x + '</button></header>' +
-    '<div class="body"><div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">' +
-    list.map(p => '<button class="tile" style="min-height:90px" data-id="' + esc(p.id) + '"><span class="nm" style="margin:0">' + esc(p.name) + '</span></button>').join('') +
-    '</div>' + (allowPhone || !list.length ? '<button class="ghost" data-phone>Not listed? Use my phone number</button>' : '') + '</div></div>');
-  el.querySelector('[data-close]').onclick = () => closeLayer();
-  el.querySelectorAll('.tile').forEach(b => b.onclick = () => cb(list.find(x => x.id === b.dataset.id)));
-  const ph = el.querySelector('[data-phone]');
-  if (ph) ph.onclick = () => cb({ byPhone: true });
 }
 
 /* ---------------- camera ---------------- */
@@ -586,640 +411,332 @@ function snap() {
   return c.toDataURL('image/jpeg', 0.62);
 }
 
-/* ---------------- PIN ---------------- */
-function pinSheet(o) {
-  if (o.byPhone && !o.employeeId) o.title = o.title || 'Enter your phone and PIN';
+/* ---------------- keypad ----------------
+   One keypad for every step: PIN, setup code, choosing a PIN. cfg.onComplete(digits, ctx) runs on
+   the 6th digit; ctx.fail(msg) clears the dots and shows the message in place (camera stays on). */
+function padSheet(cfg) {
   const el = openLayer(
-    '<div class="panel"><header><div><div class="label">' + (o.next === 'mgr' ? 'Manager' : o.next === 'fix' ? 'Fix a punch' : 'Enter your PIN') + '</div><h3>' + esc(o.title) + '</h3></div><button class="x" data-close>' + ICON.x + '</button></header>' +
-    '<div class="body">' +
-    (o.next === 'punch' ? '<div class="cam"><video playsinline muted></video><div class="nocam">Starting camera…</div></div>' : '') +
-    (o.byPhone ? '<div class="field"><label class="label">Cell number</label><input class="inp" id="pPhone" inputmode="tel" maxlength="14" placeholder="(000) 000-0000"></div>' : '') +
-    '<div class="dots" id="dots"><span></span><span></span><span></span><span></span></div>' +
+    '<div class="panel"><header><div><div class="label">' + esc(cfg.label || 'Enter your PIN') + '</div><h3>' + esc(cfg.title || '') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header>' +
+    '<div class="body">' + (cfg.lead ? '<div class="lead">' + esc(cfg.lead) + '</div>' : '') +
+    (cfg.cam ? '<div class="cam"><video playsinline muted></video><div class="nocam">Starting camera…</div></div>' : '') +
+    (cfg.phone ? '<div class="field"><label class="label" for="pPhone">Cell number</label><input class="inp" id="pPhone" inputmode="tel" maxlength="14" placeholder="(000) 000-0000" value="' + esc(cfg.phoneVal || '') + '"></div>' : '') +
+    '<div class="dots" id="dots">' + '<span></span>'.repeat(PIN_LEN) + '</div>' +
     '<div class="pad">' + [1,2,3,4,5,6,7,8,9].map(n => '<button data-k="' + n + '">' + n + '</button>').join('') +
     '<button class="fn" data-k="c">Clear</button><button data-k="0">0</button><button class="fn" data-k="b">Delete</button></div>' +
-    '<div class="msg" id="pMsg">' + esc(o.error || '') + '</div></div></div>');
-  o.error = '';
+    '<div class="msg" id="pMsg" role="alert">' + esc(cfg.error || '') + '</div></div></div>');
   el.querySelector('[data-close]').onclick = () => closeLayer();
-  if (o.next === 'punch') startCam(el.querySelector('.cam'));
+  if (cfg.cam) startCam(el.querySelector('.cam')); else stopCam();
   let pin = '', busy = false;
   const draw = () => el.querySelectorAll('#dots span').forEach((s, i) => s.classList.toggle('on', i < pin.length));
-  el.querySelectorAll('.pad button').forEach(b => b.onclick = async () => {
+  const ctx = {
+    phone: () => ($('#pPhone') || {}).value || '',
+    busy: t => { busy = true; $('#pMsg').className = 'msg info'; $('#pMsg').innerHTML = '<span class="spin"></span> ' + esc(t || 'Checking…'); },
+    fail: m => {
+      busy = false; pin = ''; draw(); $('#pMsg').className = 'msg'; $('#pMsg').textContent = m;
+      const d = $('#dots'); if (d) { d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake'); }
+    }
+  };
+  el.querySelectorAll('.pad button').forEach(b => b.onclick = () => {
     if (busy) return;
     const k = b.dataset.k;
-    if (k === 'c') pin = ''; else if (k === 'b') pin = pin.slice(0, -1); else if (pin.length < 4) pin += k;
-    draw(); $('#pMsg').textContent = '';
-    if (pin.length === 4) {
-      busy = true; $('#pMsg').innerHTML = '<span class="spin"></span>';
+    if (k === 'c') pin = ''; else if (k === 'b') pin = pin.slice(0, -1); else if (pin.length < PIN_LEN) pin += k;
+    draw(); $('#pMsg').className = 'msg'; $('#pMsg').textContent = '';
+    if (pin.length === PIN_LEN) {
+      if (cfg.phone && digitsOf(ctx.phone()).length !== 10) return ctx.fail('Enter your 10-digit cell number first.');
+      cfg.onComplete(pin, ctx);
+    }
+  });
+  return el;
+}
+function digitsOf(v) { return String(v || '').replace(/\D/g, '').slice(-10); }
+
+/** Clock in or out. o: { employeeId | byPhone, title, lead, phoneVal, error } */
+function pinSheet(o) {
+  padSheet({
+    label: 'Enter your PIN', title: o.title, lead: o.lead, cam: true, phone: !!o.byPhone, phoneVal: o.phoneVal, error: o.error,
+    onComplete: (pin, ctx) => submitPunch(o, pin, ctx, snap(), ctx.phone())
+  });
+}
+
+/* ---------------- first sign-in: choose your own PIN ---------------- */
+function looksWeak(pin) {
+  if (/^(\d)\1+$/.test(pin)) return 'Pick a PIN that isn’t the same digit over and over.';
+  if ('01234567890'.indexOf(pin) !== -1 || '09876543210'.indexOf(pin) !== -1) return 'Pick a PIN that isn’t a run of numbers like 123456.';
+  if (/^(\d\d)\1\1$/.test(pin) || /^(\d\d\d)\1$/.test(pin)) return 'Pick a PIN that isn’t a repeating pattern.';
+  return '';
+}
+/** o: { employeeId | phone, title }. Setup code → choose PIN → confirm (photo) → saved → clocked in. */
+function setupSheet(o, step, err) {
+  step = step || 1;
+  const who = o.employeeId ? { employeeId: o.employeeId } : { phone: o.phone };
+  if (step === 1) return padSheet({
+    label: 'First time on the clock', title: o.title || 'Set up your PIN',
+    lead: 'Enter the setup code. Your manager has it. Next you’ll choose your own PIN.', error: err,
+    onComplete: code => { o.code = code; setupSheet(o, 2); }
+  });
+  if (step === 2) return padSheet({
+    label: 'Choose your PIN', title: 'Pick 6 numbers you’ll remember',
+    lead: 'This is your own PIN for the Prime One clock. Don’t share it. Nobody at Prime One can see it.', error: err,
+    onComplete: (pin, ctx) => { const w = looksWeak(pin); if (w) return ctx.fail(w); o.newPin = pin; setupSheet(o, 3); }
+  });
+  padSheet({
+    label: 'Confirm your PIN', title: 'Enter it again', cam: true,
+    onComplete: async (pin, ctx) => {
+      if (pin !== o.newPin) return setupSheet(o, 2, 'Those didn’t match. Pick your PIN again.');
+      const photo = snap();
+      ctx.busy('Saving your PIN…');
       try {
-        const who = { employeeId: o.employeeId || '', phone: o.byPhone ? ($('#pPhone') || {}).value : '' };
-        if (o.next === 'punch') {
-          const person = (ROSTER.people || []).find(x => x.id === o.employeeId);
-          const okLocal = await pinLooksRight(person, pin);
-          if (okLocal === false) throw new Error(localMiss(o.employeeId));
-          if (okLocal === 'locked') throw new Error('Too many tries. Wait 1 minute and try again.');
-          busy = false; startPunch(o, who, pin); return;
-        }
-        const r = await api('verify', Object.assign({ pin }, who));
-        if (o.next === 'fix') fixSheet(r, null);
-        else if (o.next === 'mgr') { if (!r.isManager) throw new Error('Managers only.'); mgrSheet(r); }
+        await api('setPin', Object.assign({ setupCode: o.code, newPin: pin }, who));
       } catch (e) {
-        $('#pMsg').textContent = e.message; pin = ''; draw(); busy = false;
-        const d = $('#dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+        if (/setup code is not right|Too many wrong setup/i.test(e.message)) return setupSheet(o, 1, e.message);
+        if (/Pick |must be/i.test(e.message)) return setupSheet(o, 2, e.message);
+        if (/already have a PIN/i.test(e.message)) { closeLayer(); return toast(e.message, 6000); }
+        return ctx.fail(isNetErr(e) ? 'No internet. Your PIN was not saved. Try again when the internet is back.' : e.message);
       }
+      toast('PIN saved. Remember it.', 3500);
+      submitPunch({ employeeId: o.employeeId, byPhone: !o.employeeId, phoneVal: o.phone, title: o.title }, pin, ctx, photo, o.phone);
     }
   });
 }
 
 /* ---------------- clock in / out ----------------
-   The screen never waits for Google. On the 4th PIN digit the done screen shows right away and the
-   punch is saved in the background. If Google says no (wrong PIN), the screen switches to the error.
-   With no internet, the punch waits on this device (with the time it was made) and is sent later. */
-const QKEY = 'p1.queue';
-function qLoad() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch (e) { return []; } }
-function qSave(q) { try { localStorage.setItem(QKEY, JSON.stringify(q)); } catch (e) {} }
+   The PIN is checked only by Google. The pad waits for the answer up to 3.5 seconds. If there's no
+   internet, or no answer in time, the punch is saved on this iPad with the time it was made and sent
+   later; it is checked when it arrives. */
+const isNetErr = e => /internet|reach the time clock/i.test(e.message || '');
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
 function stampMs(st) { const m = String(st || '').match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]).getTime() : 0; }
 function nowLabel() { return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
-const isNetErr = e => /internet|reach the time clock/i.test(e.message || '');
+function msLabel(ms) { return new Date(ms).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
 
-async function sha256hex(t) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); }
-const MISSES = {};
-async function pinLooksRight(p, pin) {
-  if (!p || !p.pin || !window.crypto || !crypto.subtle) return null; // unknown: the server decides
-  const m = MISSES[p.id]; if (m && m.n >= 5 && Date.now() - m.at < 60000) return 'locked';
-  const h = await sha256hex(p.pin.salt + ':' + pin), t = await sha256hex(ROSTER.deviceId + ':' + h);
-  const ok = parseInt(t.slice(0, 2), 16) === p.pin.tag;
-  if (ok) delete MISSES[p.id];
-  return ok;
+/**
+ * When this punch happened. ANCHOR is the server's clock at the last reply plus a stopwatch
+ * (performance.now) that changing the iPad's clock setting doesn't affect. If the stopwatch and the
+ * iPad's clock agree, the time is "anchored" (trusted). If not, or the app restarted since the
+ * last reply, the iPad's clock is used and the server marks the punch for Juliana to check.
+ */
+function punchClock() {
+  const skew = Number(store.get('p1.skew') || 0);
+  const devMs = Date.now() - skew;
+  if (ANCHOR) {
+    const est = ANCHOR.server + (performance.now() - ANCHOR.perf);
+    if (Math.abs(est - devMs) < 120000) return { ms: Math.round(est), source: 'anchored' };
+  }
+  return { ms: Math.round(devMs), source: 'device' };
 }
-function localMiss(id) {
-  const m = MISSES[id] = MISSES[id] && Date.now() - MISSES[id].at < 60000 ? MISSES[id] : { n: 0, at: Date.now() };
-  m.n++; m.at = Date.now();
-  const left = 5 - m.n;
-  return left > 0 ? 'Wrong PIN. ' + left + (left === 1 ? ' try' : ' tries') + ' left.' : 'Too many tries. Wait 1 minute and try again.';
-}
-function startPunch(o, who, pin) {
+
+function submitPunch(o, pin, ctx, photo, phone) {
   const p = (ROSTER.people || []).find(x => x.id === o.employeeId);
-  const photo = snap();
-  const job = { cid: uid(), who, pin, photo, at: Date.now(), confirm: true, name: p ? p.name.split(' ')[0] : '', guess: p ? (p.status === 'in' ? 'OUT' : 'IN') : '' };
-  if (p && p.status === 'in' && Date.now() - stampMs(p.since) < 15 * 60000) return confirmOut(o, job, p);
-  goPunch(o, job);
+  const job = {
+    cid: uid(), pin, photo, at: punchClock(),
+    who: { employeeId: o.employeeId || '', phone: o.employeeId ? '' : phone || '' },
+    name: p ? p.name.split(' ')[0] : '', guess: p ? (p.status === 'in' && !p.elsewhere ? 'OUT' : 'IN') : ''
+  };
+  ctx.busy('Checking…');
+  runJob(o, job, {}, ctx);
 }
-function confirmOut(o, job, p) {
+function payload(job, flags) {
+  return Object.assign({ pin: job.pin, photo: job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source }, job.who, flags || {});
+}
+const INFLIGHT = {};
+async function runJob(o, job, flags, ctx) {
+  const req = api('clock', payload(job, flags));
+  INFLIGHT[job.cid] = true;
+  req.then(() => delete INFLIGHT[job.cid], () => delete INFLIGHT[job.cid]);
+  let r;
+  try { r = await Promise.race([req, new Promise(ok => setTimeout(() => ok('SLOW'), 3500))]); }
+  catch (e) { return punchError(o, job, e, ctx); }
+  if (r === 'SLOW') {
+    // Keep it safe on this iPad now; if the slow answer still arrives, it takes the punch off the list.
+    await qPut(job);
+    savedOffline(job);
+    req.then(res => {
+      if (res.confirm || res.switchStore) return;    // the saved copy sends it as-is later
+      qDel(job.cid); takeRoster(res.roster);
+      if (CUR_DONE === job.cid) { doneSheet({ cid: job.cid, type: res.type, name: res.fullName || res.name, time: res.time }); updateDone(res); }
+    }).catch(e => { if (!isNetErr(e)) { qDel(job.cid); addRejected(job, e.message); } });
+    return;
+  }
+  punchResult(o, job, r);
+}
+function punchResult(o, job, r) {
+  if (r.confirm) return confirmSheet('Clock out?', 'You clocked in at ' + r.sinceLabel, 'That was only a few minutes ago. End your shift now?', 'No, keep me in', 'Yes, clock out', () => resend(o, job, { confirm: true }));
+  if (r.switchStore) return confirmSheet('Another store', 'Still clocked in at ' + r.otherStore, 'You’re clocked in at ' + r.otherStore + ' since ' + r.sinceLabel + '. Clock out there and in here?', 'Cancel', 'Yes, switch to here', () => resend(o, job, { switchStore: true, confirm: true }));
+  takeRoster(r.roster);
+  doneSheet({ cid: job.cid, type: r.type, name: r.fullName || r.name, time: r.time });
+  updateDone(r);
+}
+function resend(o, job, flags) {
+  const el = openLayer('<div class="panel"><div class="body" style="text-align:center;padding:48px 28px"><span class="spin"></span><span class="spin"></span><span class="spin"></span><div class="status" style="margin-top:18px">Saving…</div></div></div>');
+  const ctx = { busy() {}, fail: m => { closeLayer(); toast(m, 5000); } };
+  runJob(o, job, flags, ctx);
+  return el;
+}
+function punchError(o, job, e, ctx) {
+  if (isNetErr(e)) { qPut(job).then(() => savedOffline(job)); return; }
+  if (e.message === 'PIN_NOT_SET') return setupSheet({ employeeId: o.employeeId, phone: job.who.phone, title: o.title === 'Working here today?' ? 'Set up your PIN' : o.title });
+  if (e.message === 'PIN_LOCKED') return lockedSheet(o.employeeId ? o.title : '');
+  ctx.fail(e.message);
+}
+function confirmSheet(label, title, text, noLabel, yesLabel, yes) {
   stopCam();
   const el = openLayer(
-    '<div class="panel"><header><div><div class="label">Clock out?</div><h3>You clocked in at ' + esc(p.sinceLabel) + '</h3></div></header>' +
-    '<div class="body"><div class="status">That was only a few minutes ago. End your shift now?</div>' +
-    '<div class="row2"><button class="ghost" style="margin:0" data-no>No, keep me in</button><button class="big out" data-yes>Yes, clock out</button></div></div></div>');
+    '<div class="panel"><header><div><div class="label">' + esc(label) + '</div><h3>' + esc(title) + '</h3></div></header>' +
+    '<div class="body"><div class="status">' + esc(text) + '</div>' +
+    '<div class="row2"><button class="ghost" style="margin:0" data-no>' + esc(noLabel) + '</button><button class="big out" data-yes>' + esc(yesLabel) + '</button></div></div></div>');
   el.querySelector('[data-no]').onclick = () => closeLayer();
-  el.querySelector('[data-yes]').onclick = () => goPunch(o, job);
+  el.querySelector('[data-yes]').onclick = yes;
 }
-function goPunch(o, job) {
-  stopCam();
-  // optimistic: show it done, update the tile
-  if (job.guess) {
-    const p = (ROSTER.people || []).find(x => x.id === job.who.employeeId);
-    if (p) { p.status = job.guess === 'IN' ? 'in' : 'out'; p.sinceLabel = nowLabel(); p.since = ''; renderTiles(); }
-  }
-  doneSheet({ cid: job.cid, type: job.guess, name: job.name, time: nowLabel(), pending: true });
-  sendJob(job).then(r => {
-    if (CUR_DONE === job.cid) updateDone(Object.assign(r, { cid: job.cid }));
-    loadRoster(true);
-  }).catch(e => {
-    if (isNetErr(e)) {
-      const q = qLoad(); q.push(job); qSave(q);
-      if (CUR_DONE === job.cid) setDoneStatus('Saved on this iPad. It will be sent when the internet is back.', 'warn');
-      updateQueueBadge();
-      return;
-    }
-    loadRoster(true);
-    if (CUR_DONE === job.cid) { o.error = e.message; pinSheet(o); }
-    else toast((job.name || 'A') + ' punch was not saved: ' + e.message, 6000);
+function savedOffline(job) {
+  const p = (ROSTER.people || []).find(x => x.id === job.who.employeeId);
+  if (p && job.guess) { p.status = job.guess === 'IN' ? 'in' : 'out'; p.sinceLabel = msLabel(job.at.ms); p.elsewhere = ''; renderTiles(); }
+  doneSheet({ cid: job.cid, type: job.guess, name: job.name || 'Saved', time: msLabel(job.at.ms) });
+  setDoneStatus('Saved on this iPad. Your PIN is checked when the internet is back.', 'warn');
+}
+
+/* ---------------- punches waiting to send (kept on the iPad) ----------------
+   Two copies: IndexedDB and localStorage, so a punch survives a restart or a full storage.
+   Each has a unique ID, so sending it twice never counts twice. */
+const QKEY = 'p1.queue';
+function lsQ() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch (e) { return []; } }
+function lsQSave(q) { try { localStorage.setItem(QKEY, JSON.stringify(q)); } catch (e) {} }
+let IDBP = null;
+function idb() {
+  if (IDBP) return IDBP;
+  IDBP = new Promise(ok => {
+    try {
+      const r = indexedDB.open('p1clock', 1);
+      r.onupgradeneeded = () => { try { r.result.createObjectStore('queue', { keyPath: 'cid' }); } catch (e) {} };
+      r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); r.onblocked = () => ok(null);
+    } catch (e) { ok(null); }
   });
+  return IDBP;
 }
-function sendJob(job) { return api('clock', Object.assign({ pin: job.pin, photo: job.photo, confirm: true, cid: job.cid, at: job.at }, job.who)); }
+function idbDo(mode, fn) {
+  return idb().then(db => new Promise(ok => {
+    if (!db) return ok(null);
+    try { const tx = db.transaction('queue', mode), st = tx.objectStore('queue'), rq = fn(st); tx.oncomplete = () => ok(rq && rq.result); tx.onerror = () => ok(null); tx.onabort = () => ok(null); }
+    catch (e) { ok(null); }
+  }));
+}
+async function qAll() {
+  const fromDb = (await idbDo('readonly', st => st.getAll())) || [];
+  const m = {}; fromDb.concat(lsQ()).forEach(j => { if (j && j.cid) m[j.cid] = j; });
+  return Object.values(m).sort((a, b) => a.at.ms - b.at.ms);
+}
+async function qPut(job) {
+  const q = lsQ().filter(j => j.cid !== job.cid); q.push(job); lsQSave(q);
+  await idbDo('readwrite', st => st.put(job));
+  updateQueueBadge();
+}
+async function qDel(cid) {
+  lsQSave(lsQ().filter(j => j.cid !== cid));
+  await idbDo('readwrite', st => st.delete(cid));
+  updateQueueBadge();
+}
+let FLUSHING = false;
 async function flushQueue() {
-  let q = qLoad();
-  if (!q.length || !store.get('p1.device')) return updateQueueBadge();
-  while (q.length) {
-    const job = q[0];
-    try { await sendJob(job); }
-    catch (e) { if (isNetErr(e)) break; toast((job.name || 'A') + ' offline punch was not saved: ' + e.message, 8000); }
-    q.shift(); qSave(q);
-  }
-  updateQueueBadge(); loadRoster(true);
+  if (FLUSHING || !store.get('p1.device')) return;
+  FLUSHING = true;
+  try {
+    for (const job of await qAll()) {
+      if (INFLIGHT[job.cid]) continue;
+      try {
+        const r = await api('clock', payload(job, { queued: true, confirm: true }));
+        await qDel(job.cid);
+        if (r.roster) takeRoster(r.roster);
+      } catch (e) {
+        if (isNetErr(e)) break;
+        await qDel(job.cid); addRejected(job, e.message);
+      }
+    }
+  } finally { FLUSHING = false; updateQueueBadge(); }
 }
-function updateQueueBadge() {
-  const n = qLoad().length, el = $('#qBadge');
-  el.textContent = n ? n + ' punch' + (n > 1 ? 'es' : '') + ' waiting for internet' : '';
+async function updateQueueBadge() {
+  const n = (await qAll()).length, el = $('#qBadge');
+  el.textContent = n ? n + ' punch' + (n > 1 ? 'es' : '') + ' waiting to send' : '';
   el.classList.toggle('hidden', !n);
 }
 setInterval(flushQueue, 30000);
 window.addEventListener('online', flushQueue);
 
+/* A punch saved offline that Google later refused (wrong PIN, locked, no PIN). It stays on the screen
+   until someone taps "Got it", so the person learns their time was NOT recorded. */
+const RKEY = 'p1.rejected';
+function rejList() { try { return JSON.parse(localStorage.getItem(RKEY) || '[]').filter(r => Date.now() - r.saved < 3 * 86400000); } catch (e) { return []; } }
+function addRejected(job, msg) {
+  const why = msg === 'PIN_NOT_SET' ? 'No PIN set up yet' : msg === 'PIN_LOCKED' ? 'PIN locked' : msg;
+  const l = rejList(); l.push({ cid: job.cid, name: job.name || 'Someone (cell ' + digitsOf(job.who.phone).slice(-4) + ')', type: job.guess, at: job.at.ms, why, saved: Date.now() });
+  try { localStorage.setItem(RKEY, JSON.stringify(l)); } catch (e) {}
+  renderRejected();
+}
+function renderRejected() {
+  const l = rejList(), b = $('#rejBar');
+  b.classList.toggle('hidden', !l.length);
+  b.textContent = l.length === 1 ? l[0].name + '’s ' + (l[0].type === 'OUT' ? 'clock-out' : 'punch') + ' at ' + msLabel(l[0].at) + ' was NOT saved · tap here' : l.length + ' punches were NOT saved · tap here';
+}
+$('#rejBar').onclick = () => {
+  const l = rejList();
+  const el = openLayer('<div class="panel"><header><div><div class="label">Not saved</div><h3>' + (l.length === 1 ? 'This punch was not saved' : 'These punches were not saved') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body">' +
+    '<div class="status">They were made while the internet was down, and Google refused them when they were sent. Text Juliana the time you started or stopped, so she can add it.</div>' +
+    '<div class="list">' + l.map(r => '<div class="item"><div class="a">' + esc(r.name) + ' · ' + (r.type === 'OUT' ? 'Clock out' : r.type === 'IN' ? 'Clock in' : 'Punch') + ' ' + esc(msLabel(r.at)) + ' ' + esc(new Date(r.at).toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })) + '</div><div class="b">' + esc(r.why) + '</div></div>').join('') + '</div>' +
+    '<button class="big" data-ok style="margin-top:22px">Got it</button></div></div>');
+  el.querySelector('[data-close]').onclick = () => closeLayer();
+  el.querySelector('[data-ok]').onclick = () => { try { localStorage.setItem(RKEY, '[]'); } catch (e) {} renderRejected(); closeLayer(); };
+};
+
 let CUR_DONE = '', doneT;
-/* Full-screen confirmation. Shown instantly; updateDone() fills in the server's answer in place. */
+/* Full-screen confirmation. */
 function doneSheet(p) {
   stopCam();
-  if (typeof p === 'string') p = { title: p, sub: arguments[1] || '' };
   CUR_DONE = p.cid || '';
-  const isIn = p.type === 'IN', isOut = p.type === 'OUT', kiosk = !!p.cid;
+  const isIn = p.type === 'IN', isOut = p.type === 'OUT';
   const el = openLayer('<div class="panel"><div class="done ' + (isIn ? 'is-in' : isOut ? 'is-out' : '') + '">' + ICON.check +
-    '<div class="label" style="margin-top:18px" id="dEye">' + (isIn ? 'Start of shift' : isOut ? 'End of shift' : kiosk ? 'Time clock' : 'Done') + '</div>' +
-    (kiosk ? '<div class="big-io" id="dTitle">' + (isIn ? 'IN' : isOut ? 'OUT' : '…') + '</div><div class="who" id="dWho">' + esc(p.name || '') + '</div><div class="when" id="dWhen">' + (p.type ? (isIn ? 'Clocked in at ' : 'Clocked out at ') + esc(p.time) : 'Checking…') + '</div>'
-      : '<h3 class="done-title">' + esc(p.title || '') + '</h3><p>' + esc(p.sub || '') + '</p>') +
+    '<div class="label" style="margin-top:18px" id="dEye">' + (isIn ? 'Start of shift' : isOut ? 'End of shift' : 'Time clock') + '</div>' +
+    '<div class="big-io" id="dTitle">' + (isIn ? 'IN' : isOut ? 'OUT' : 'SAVED') + '</div><div class="who" id="dWho">' + esc(p.name || '') + '</div><div class="when" id="dWhen">' + (p.type ? (isIn ? 'Clocked in at ' : 'Clocked out at ') + esc(p.time) : 'At ' + esc(p.time)) + '</div>' +
     '<p id="dExtra" style="min-height:26px"></p>' +
-    (kiosk ? '<div class="save" id="dSave"><span class="spin"></span> Saving</div>' : '') +
-    '<div id="dActs" style="min-height:' + (kiosk ? '62' : '0') + 'px"></div></div></div>', kiosk ? 'sheet full' : 'sheet');
+    '<div class="save ok" id="dSave">Saved</div>' +
+    '<div id="dActs" style="min-height:62px"></div></div></div>', 'sheet full');
   clearTimeout(doneT);
-  doneT = setTimeout(() => { if (CUR_DONE === (p.cid || '')) { CUR_DONE = ''; closeLayer(); } }, kiosk ? 7000 : 4000);
+  doneT = setTimeout(() => { if (CUR_DONE === (p.cid || '')) { CUR_DONE = ''; closeLayer(); } }, 7000);
   el.onclick = e => { if (!e.target.closest('button')) { clearTimeout(doneT); CUR_DONE = ''; closeLayer(); } };
 }
 function updateDone(r) {
-  const isIn = r.type === 'IN';
-  const set = (id, v) => { const e = document.getElementById(id); if (e) e.innerHTML = v; };
-  set('dEye', isIn ? 'Start of shift' : 'End of shift');
-  set('dTitle', isIn ? 'IN' : 'OUT');
-  set('dWho', esc(r.fullName || r.name));
-  set('dWhen', (isIn ? 'Clocked in at ' : 'Clocked out at ') + esc(r.time));
   const extra = [];
-  if (!isIn && r.hoursToday != null) extra.push('Worked today: ' + fmtHours(r.hoursToday));
+  if (r.type === 'OUT' && r.hoursToday != null) extra.push('Worked today: ' + fmtHours(r.hoursToday));
+  if (r.visiting) extra.push('<span style="color:var(--silver)">You’re on this store’s list until midnight.</span>');
   if (r.noPhoto) extra.push('<span style="color:var(--amber-d)">No photo was taken. Check the camera.</span>');
-  if (r.fixNote) extra.push('<span style="color:var(--silver)">' + esc(r.fixNote) + '</span>');
-  set('dExtra', extra.join('<br>'));
+  const x = document.getElementById('dExtra'); if (x) x.innerHTML = extra.join('<br>');
   setDoneStatus('Saved', 'ok');
-  const acts = $('#dActs'); if (!acts) return;
-  acts.innerHTML = (r.openWarning ? '<div class="warn" style="text-align:left;margin-top:18px">Your clock-in on ' + esc(r.openWarning) + ' has no clock-out.</div><button class="ghost" data-miss>Add my missing clock-out</button>' : '') +
+  const acts = $('#dActs'); if (!acts || !r.ticket) return;
+  acts.innerHTML = (r.openWarning ? '<div class="warn" style="text-align:left;margin-top:18px">Your clock-in on ' + esc(r.openWarning) + ' has no clock-out. Text Juliana the time you left.</div>' : '') +
     '<button class="ghost" data-undo style="margin-top:14px">Not me? Undo</button>';
-  if (r.openWarning) { clearTimeout(doneT); doneT = setTimeout(() => { if (CUR_DONE === r.cid) { CUR_DONE = ''; closeLayer(); } }, 15000); }
+  if (r.openWarning) { clearTimeout(doneT); doneT = setTimeout(() => { if (CUR_DONE === r.cid || CUR_DONE) { CUR_DONE = ''; closeLayer(); } }, 15000); }
   const u = acts.querySelector('[data-undo]');
   u.onclick = async () => {
     clearTimeout(doneT); u.disabled = true; u.innerHTML = '<span class="spin"></span>';
-    try { await api('undo', { ticket: r.ticket, punchId: r.punchId }); toast('Punch undone'); CUR_DONE = ''; closeLayer(); loadRoster(true); }
+    try { const res = await api('undo', { ticket: r.ticket, punchId: r.punchId }); takeRoster(res.roster); toast('Punch undone'); CUR_DONE = ''; closeLayer(); }
     catch (e) { toast(e.message, 4000); u.disabled = false; u.textContent = 'Not me? Undo'; }
   };
-  const m = acts.querySelector('[data-miss]');
-  if (m) m.onclick = () => { clearTimeout(doneT); CUR_DONE = ''; fixSheet({ ticket: r.ticket, employeeId: r.employeeId, name: r.fullName, recent: r.recent }, null, { kind: 'Missed clock out', date: r.openDate }); };
 }
 function setDoneStatus(text, cls) { const d = $('#dSave'); if (d) { d.className = 'save ' + (cls || ''); d.textContent = text; } }
 function fmtHours(h) { const m = Math.round(h * 60); return Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm'; }
 
-/* ---------------- fix a punch ---------------- */
-const KINDS = ['Missed clock in', 'Missed clock out', 'Wrong time', 'Remove punch'];
-function lastDays(n) {
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    if (d.getDay() === 0) continue; // nobody works Sunday
-    const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    out.push({ iso, label: i === 0 ? 'Today' : i === 1 ? 'Yesterday' : d.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' }) });
-  }
-  return out;
-}
-function fixSheet(r, forPerson, preset) {
-  stopCam();
-  const target = forPerson || { id: r.employeeId, name: r.name, recent: r.recent };
-  const note = !forPerson && r.fixNote ? '<div class="warn" style="border-left-color:var(--silver);color:var(--lsilver);background:none">' + esc(r.fixNote) + '</div>' : '';
-  const days = lastDays(8);
-  const st = { kind: (preset && preset.kind) || '', date: days[0].iso, punch: '' };
-  if (preset && preset.date) { if (!days.some(d => d.iso === preset.date)) days.push({ iso: preset.date, label: preset.date.slice(5).replace('-', '/') }); st.date = preset.date; }
-  const el = openLayer(
-    '<div class="panel wide"><header><div><div class="label">Fix a punch' + (forPerson ? ' · filed by ' + esc(r.name) : '') + '</div><h3>' + esc(target.name) + '</h3></div><button class="x" data-close>' + ICON.x + '</button></header>' +
-    '<div class="body">' + note +
-    '<div class="field"><label class="label">What happened?</label><div class="seg" id="fKind">' + KINDS.map(k => '<button data-v="' + k + '">' + k + '</button>').join('') + '</div></div>' +
-    '<div class="field"><label class="label">Day</label><div class="chips" id="fDay">' + days.map((d, i) => '<button data-v="' + d.iso + '">' + d.label + '</button>').join('') + '</div></div>' +
-    '<div class="field hidden" id="fPunchF"><label class="label">Which punch?</label><div class="chips" id="fPunch"></div></div>' +
-    '<div class="field hidden" id="fTimeF"><label class="label">Correct time</label><input type="time" class="inp" id="fTime"></div>' +
-    '<div class="field"><label class="label">Reason</label><textarea class="inp" id="fReason" maxlength="500" placeholder="e.g. iPad was not working when I arrived"></textarea></div>' +
-    '<button class="big" id="fSend">Send</button><div class="msg" id="fMsg"></div></div></div>');
-  el.querySelector('[data-close]').onclick = () => closeLayer();
-  const recent = target.recent || [];
-  const refresh = () => {
-    el.querySelectorAll('#fKind button').forEach(b => b.classList.toggle('on', b.dataset.v === st.kind));
-    el.querySelectorAll('#fDay button').forEach(b => b.classList.toggle('on', b.dataset.v === st.date));
-    const needPunch = st.kind === 'Wrong time' || st.kind === 'Remove punch';
-    $('#fPunchF').classList.toggle('hidden', !needPunch);
-    $('#fTimeF').classList.toggle('hidden', !st.kind || st.kind === 'Remove punch');
-    const list = recent.filter(p => p.date === st.date);
-    $('#fPunch').innerHTML = list.length ? list.map(p => '<button data-v="' + p.id + '"' + (p.id === st.punch ? ' class="on"' : '') + '>' + (p.type === 'IN' ? 'In ' : 'Out ') + esc(p.time) + '</button>').join('') : '<span style="color:var(--silver)">No punches on this day.</span>';
-    el.querySelectorAll('#fPunch button').forEach(b => b.onclick = () => { st.punch = b.dataset.v; refresh(); });
-  };
-  el.querySelectorAll('#fKind button').forEach(b => b.onclick = () => { st.kind = b.dataset.v; st.punch = ''; refresh(); });
-  el.querySelectorAll('#fDay button').forEach(b => b.onclick = () => { st.date = b.dataset.v; st.punch = ''; refresh(); });
-  refresh();
-  $('#fSend').onclick = async () => {
-    const b = $('#fSend'); $('#fMsg').textContent = '';
-    if (!st.kind) { $('#fMsg').textContent = 'Choose what happened.'; return; }
-    if ((st.kind === 'Wrong time' || st.kind === 'Remove punch') && !st.punch) { $('#fMsg').textContent = 'Tap the punch to fix.'; return; }
-    if (st.kind !== 'Remove punch' && !$('#fTime').value) { $('#fMsg').textContent = 'Enter the correct time.'; return; }
-    if (!$('#fReason').value.trim()) { $('#fMsg').textContent = 'Write a short reason.'; return; }
-    b.disabled = true; b.innerHTML = '<span class="spin"></span>';
-    try {
-      const out = await api('requestFix', { ticket: r.ticket, employeeId: target.id, kind: st.kind, date: st.date, time: $('#fTime').value, punchId: st.punch, reason: $('#fReason').value });
-      doneSheet('Fix sent', out.message);
-    } catch (e) { $('#fMsg').textContent = e.message; b.disabled = false; b.textContent = 'Send'; }
-  };
-}
-
-/* ---------------- manager ---------------- */
-async function mgrSheet(r) {
-  stopCam();
-  const el = openLayer('<div class="panel wide"><header><div><div class="label">Manager</div><h3>' + esc(r.name) + '</h3></div><button class="x" data-close>' + ICON.x + '</button></header><div class="body" id="mBody"><span class="spin"></span></div></div>');
-  el.querySelector('[data-close]').onclick = () => closeLayer();
-  let q;
-  try { q = await api('mgrQueue', { ticket: r.ticket }); } catch (e) { $('#mBody').innerHTML = '<div class="msg">' + esc(e.message) + '</div>'; return; }
-  const fx = f => '<div class="item"><div class="a">' + esc(f.name) + ' · ' + esc(f.kind) + '</div><div class="b">' + esc(dayName(f.date) + ' ' + f.date.slice(5).replace('-', '/')) + (f.time ? ' · ' + esc(fmtT(f.time)) : '') + ' · ' + esc(f.reason) + '<br>Filed by ' + esc(f.requestedBy) + '</div>';
-  $('#mBody').innerHTML =
-    '<div class="label sub">Waiting for your approval</div><div class="list">' +
-    (q.pending.length ? q.pending.map(f => fx(f) + (f.employeeId === r.employeeId ? '<div class="b" style="margin-top:8px">Your own fix goes to the office.</div>' : '<div class="acts"><button data-rej="' + f.id + '">Reject</button><button class="ok" data-ok="' + f.id + '">Approve</button></div>') + '</div>').join('') : '<div class="item b">Nothing waiting.</div>') +
-    (q.waitingOffice.length ? '</div><div class="label sub">Sent to the office</div><div class="list">' + q.waitingOffice.map(f => fx(f) + '</div>').join('') : '') +
-    '</div><div class="label sub">Crew right now</div><div class="list">' +
-    q.crew.map(p => '<div class="item"><div class="a">' + esc(p.name) + '</div><div class="b">' + (p.status === 'in' ? 'In since ' + esc(p.sinceLabel) : 'Out') + '</div></div>').join('') +
-    '</div><button class="ghost" id="mFile">File a fix for someone on my crew</button>';
-  const decide = async (id, d, note) => {
-    try { const o = await api('mgrDecide', { ticket: r.ticket, requestId: id, decision: d, note: note || '' }); toast(o.message); mgrSheet(r); }
-    catch (e) { toast(e.message, 4000); }
-  };
-  el.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { if (b.disabled) return; b.disabled = true; b.innerHTML = '<span class="spin"></span>'; decide(b.dataset.ok, 'Approved'); });
-  el.querySelectorAll('[data-rej]').forEach(b => b.onclick = () => {
-    const box = b.closest('.item');
-    if (box.querySelector('textarea')) return;
-    const d = document.createElement('div');
-    d.innerHTML = '<textarea class="inp" style="margin-top:10px;min-height:70px" placeholder="Why? The employee will see this."></textarea><div class="acts"><button data-c>Cancel</button><button class="ok" data-g>Reject fix</button></div>';
-    box.appendChild(d);
-    d.querySelector('[data-c]').onclick = () => d.remove();
-    d.querySelector('[data-g]').onclick = e => { const n = d.querySelector('textarea').value.trim(); if (!n) { toast('Write a short reason.'); return; } if (e.target.disabled) return; e.target.disabled = true; decide(b.dataset.rej, 'Rejected', n); };
-  });
-  $('#mFile').onclick = () => pickPerson('Fix a punch', 'Who is it for?', q.crew.filter(p => p.id !== r.employeeId), p => fixSheet(r, { id: p.id, name: p.name, recent: [] }));
-}
-function fmtT(hhmm) { const m = String(hhmm).match(/(\d{1,2}):(\d{2})/); if (!m) return hhmm; const h = +m[1]; return ((h % 12) || 12) + ':' + m[2] + (h < 12 ? ' AM' : ' PM'); }
-
-/* =====================================================================
-   OFFICE  (Juliana, Andre, Scott, Gelson)
-   Opens instantly with the last data loaded in this browser tab, then refreshes in one call.
-   ===================================================================== */
-let OFF = { token: '', home: null, cur: null, tab: 'today', store: 'ALL', week: '', probOnly: false, open: {}, weeks: {}, updated: '' };
-const OCACHE = 'p1.officeCache';
-const OICON = {
-  refresh: '<svg viewBox="0 0 256 256"><path fill="currentColor" d="M220 48v48a4 4 0 0 1-4 4h-48a4 4 0 0 1 0-8h38.34l-18.06-18.06a84 84 0 1 0-1.74 120.5 4 4 0 1 1 5.49 5.82A92 92 0 1 1 193.94 68.4L212 86.34V48a4 4 0 0 1 8 0Z"/></svg>',
-  x: '<svg viewBox="0 0 256 256" width="22" height="22"><path fill="currentColor" d="M202.83 197.17a4 4 0 0 1-5.66 5.66L128 133.66l-69.17 69.17a4 4 0 0 1-5.66-5.66L122.34 128 53.17 58.83a4 4 0 0 1 5.66-5.66L128 122.34l69.17-69.17a4 4 0 1 1 5.66 5.66L133.66 128Z"/></svg>'
-};
-
-function officeLogin() {
-  if (!store.get('p1.device')) { show('osign'); setTimeout(() => $('#sPhone').focus(), 50); return; }
-  const el = openLayer(
-    '<div class="panel"><header><div><div class="label">Office</div><h3>Sign in</h3></div><button class="x" data-close>' + ICON.x + '</button></header>' +
-    '<div class="body"><div class="field"><label class="label">Cell number</label><input class="inp" id="oPhone" inputmode="tel" autocomplete="tel" placeholder="(000) 000-0000"></div>' +
-    '<div class="field"><label class="label">PIN</label><input class="inp" id="oPin" inputmode="numeric" type="password" maxlength="4" placeholder="4 digits"></div>' +
-    '<button class="big" id="oGo">Sign in</button><div class="msg" id="oMsg"></div></div></div>');
-  el.querySelector('[data-close]').onclick = () => closeLayer();
-  const go = () => doOfficeLogin($('#oPhone').value, $('#oPin').value, $('#oGo'), $('#oMsg'), 'Sign in');
-  $('#oGo').onclick = go; $('#oPin').onkeydown = e => { if (e.key === 'Enter') go(); };
-}
-async function doOfficeLogin(phone, pin, btn, msg, label) {
-  msg.textContent = ''; btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span class="spin"></span><span class="spin"></span>';
-  try {
-    const r = await api('officeLogin', { phone, pin });
-    OFF.token = r.token;
-    const keep = { token: r.token, until: Date.now() + 12 * 3600000 };
-    if (store.get('p1.device')) { try { sessionStorage.setItem('p1.office', JSON.stringify(keep)); } catch (e) {} }   // shared store iPad: this session only
-    else store.set('p1.office', JSON.stringify(keep));
-    $('#offWho').textContent = r.name;
-    if (r.data) takeOffice(r.data);
-    show('office'); officeRender(); if (!r.data) officeLoad();
-  } catch (e) { msg.textContent = e.message; }
-  btn.disabled = false; btn.textContent = label;
-}
-$('#sGo').onclick = () => doOfficeLogin($('#sPhone').value, $('#sPin').value, $('#sGo'), $('#sMsg'), 'Sign in');
-$('#sPin').onkeydown = e => { if (e.key === 'Enter') $('#sGo').click(); };
-function takeOffice(d) {
-  OFF.home = d.home; OFF.cur = d.sheet; OFF.weeks = {}; OFF.updated = nowLabel();
-  if (!OFF.week) OFF.week = d.home.currentWeek;
-  $('#offWho').textContent = d.home.me;
-  if (!store.get('p1.device')) store.set(OCACHE, JSON.stringify({ home: d.home, sheet: d.sheet, updated: OFF.updated }));
-  setUpd('Updated ' + OFF.updated);
-}
-async function oapi(action, data) {
-  try { return await api(action, Object.assign({ token: OFF.token }, data || {})); }
-  catch (e) { if (/sign in again|signed out/i.test(e.message)) officeSignOut(); throw e; }
-}
-function officeSignOut() {
-  OFF = Object.assign(OFF, { token: '', home: null, cur: null, weeks: {} });
-  try { sessionStorage.removeItem('p1.office'); } catch (e) {}
-  store.del('p1.office'); store.del(OCACHE);
-  if (store.get('p1.device')) startKiosk(); else show('setup');
-}
-$('#offOut').onclick = officeSignOut;
-$('#offRefresh').onclick = () => officeLoad();
-$('#offTabs').querySelectorAll('button').forEach(b => b.onclick = () => { OFF.tab = b.dataset.t; officeRender(); $('#offBody').scrollTop = 0; });
-$('#offRefresh').innerHTML = OICON.refresh + '<span>Refresh</span>';
-
-async function busy(btn, fn) {
-  if (btn.disabled) return;
-  const label = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span class="spin"></span><span class="spin"></span>';
-  try { return await fn(); } catch (e) { toast(e.message, 4500); } finally { if (document.body.contains(btn)) { btn.disabled = false; btn.innerHTML = label; } }
-}
-function needReason(id) {
-  const f = $(id), ok = f.value.trim().length > 0;
-  f.classList.toggle('err', !ok);
-  const m = f.parentNode.querySelector('.of-err') || f.parentNode.appendChild(Object.assign(document.createElement('div'), { className: 'of-err' }));
-  m.textContent = ok ? '' : 'Write a short reason. It is kept in the edit log.';
-  if (!ok) f.focus();
-  return ok;
-}
-const PLUS = '<svg viewBox="0 0 256 256"><path fill="currentColor" d="M220 128a4 4 0 0 1-4 4h-84v84a4 4 0 0 1-8 0v-84H40a4 4 0 0 1 0-8h84V40a4 4 0 0 1 8 0v84h84a4 4 0 0 1 4 4Z"/></svg>';
-const CARET_L = '<svg viewBox="0 0 256 256"><path fill="currentColor" d="M162.83 205.17a4 4 0 0 1-5.66 5.66l-80-80a4 4 0 0 1 0-5.66l80-80a4 4 0 1 1 5.66 5.66L85.66 128Z"/></svg>';
-const CARET_R = '<svg viewBox="0 0 256 256"><path fill="currentColor" d="m178.83 130.83-80 80a4 4 0 0 1-5.66-5.66L170.34 128 93.17 50.83a4 4 0 0 1 5.66-5.66l80 80a4 4 0 0 1 0 5.66Z"/></svg>';
-function friendlyStamp(st) {
-  const ms = stampMs(st); if (!ms) return st || '—';
-  const d = new Date(ms), now = new Date(), t = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  if (d.toDateString() === now.toDateString()) return 'today ' + t;
-  const days = Math.round((now - d) / 86400000);
-  return days <= 1 ? 'yesterday ' + t : days + ' days ago';
-}
-function setUpd(t) { $('#offUpd').textContent = t; }
-async function officeLoad() {
-  if (!OFF.home) {
-    try { const c = JSON.parse(store.get(OCACHE) || 'null'); if (c) { OFF.home = c.home; OFF.cur = c.sheet; OFF.updated = c.updated; } } catch (e) {}
-    if (OFF.home) { if (!OFF.week) OFF.week = OFF.home.currentWeek; officeRender(); }
-    else $('#offBody').innerHTML = '<div class="of-wrap">' + '<div class="of-skel" style="width:30%"></div><div class="of-skel" style="height:96px"></div><div class="of-skel"></div><div class="of-skel"></div><div class="of-skel" style="width:70%"></div></div>';
-  }
-  setUpd('Updating…');
-  try {
-    takeOffice(await oapi('officeAll', { storeId: 'ALL' }));
-    officeRender();
-  } catch (e) {
-    if (!OFF.home) $('#offBody').innerHTML = '<div class="of-wrap"><div class="of-empty">' + esc(e.message) + '</div></div>';
-    else toast(e.message, 4000);
-  }
-  setUpd(OFF.updated ? 'Updated ' + OFF.updated : '');
-}
-function storeName(id) { if (!id || id === '—') return 'No store'; const s = ((OFF.home && OFF.home.stores) || []).find(x => x.id === id); return s ? s.name : 'Store not set up: ' + id; }
-function officeRender() {
-  if (!OFF.home) return;
-  $('#offTabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === OFF.tab));
-  const ready = (OFF.home.fixes || []).filter(f => f.managerStatus === 'Approved').length;
-  $('#fixN').textContent = ready; $('#fixN').classList.toggle('hidden', !ready);
-  ({ today: renderToday, fixes: renderFixes, week: renderWeek, devices: renderDevices })[OFF.tab]();
-}
-function flagCls(f) { return /On the clock/.test(f) ? 'green' : /No clock-out|without|No punches|Not in yet/.test(f) ? 'red' : 'amber'; }
-function tags(flags) { return flags.map(f => '<span class="of-tag ' + flagCls(f) + '">' + esc(f) + '</span>').join(''); }
-function longDate(iso) { const p = iso.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }); }
-function dayName(iso) { const p = iso.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', { weekday: 'short' }); }
-function hrs(h) { return h ? fmtHours(h) : '0h'; }
-function fmtDur(min) { min = Math.round(min); return min < 60 ? min + ' min' : Math.floor(min / 60) + 'h ' + String(min % 60).padStart(2, '0') + 'm'; }
-
-/* ---- Today: problems first, then each store ---- */
-function renderToday() {
-  const H = OFF.home, t = H.today, rows = (OFF.cur && OFF.cur.rows) || [];
-  const ppl = {}; H.people.forEach(p => ppl[p.id] = p);
-  const todayOf = r => r.days.find(d => d.date === t);
-  const inNow = H.people.filter(p => p.status === 'in').length;
-  const late = rows.filter(r => (todayOf(r) || {}).lateMin > 0);
-  const notIn = rows.filter(r => ((todayOf(r) || {}).flags || []).includes('Not in yet'));
-  const missing = rows.filter(r => r.days.some(d => d.date < t && d.flags.includes('No clock-out')));
-  const ready = (H.fixes || []).filter(f => f.managerStatus === 'Approved');
-  const issues = [];
-  notIn.forEach(r => { const d = todayOf(r); issues.push({ r, sev: 'red', what: 'Not in yet', det: d.schedule ? 'Scheduled ' + d.schedule.split('–')[0] : '' }); });
-  missing.forEach(r => r.days.filter(d => d.date < t && d.flags.includes('No clock-out')).forEach(d => { const fx = (H.fixes || []).find(f => f.employeeId === r.id && f.date === d.date);
-    issues.push(fx ? { r, sev: 'navy', what: 'Fix pending', det: 'No clock-out ' + dayName(d.date) + ' · ' + (fx.managerStatus === 'Approved' ? 'ready to apply' : 'waiting for manager'), go: 'fixes' } : { r, sev: 'red', what: 'No clock-out ' + dayName(d.date), det: 'In at ' + d.firstIn }); }));
-  const fixFor = (id, date) => (H.fixes || []).find(f => f.employeeId === id && f.date === date);
-  late.forEach(r => { const d = todayOf(r); const fx = fixFor(r.id, t);
-    if (fx) issues.push({ r, sev: 'navy', what: 'Fix pending', det: fx.kind + (fx.time ? ' ' + fmtT(fx.time) : '') + ' · ' + (fx.managerStatus === 'Approved' ? 'ready to apply' : 'waiting for manager'), go: 'fixes' });
-    else if (d.lateMin > 120) issues.push({ r, sev: 'red', what: 'First punch ' + d.firstIn, det: 'Likely a missed clock-in · scheduled ' + d.schedule.split('–')[0] });
-    else issues.push({ r, sev: 'amber', what: 'Late ' + fmtDur(d.lateMin), det: 'In ' + d.firstIn + ' · scheduled ' + d.schedule.split('–')[0] }); });
-  rows.forEach(r => { const d = todayOf(r); if (d && d.earlyMin) issues.push({ r, sev: 'amber', what: 'Left ' + fmtDur(d.earlyMin) + ' early', det: 'Out ' + d.lastOut }); });
-  rows.forEach(r => { const d = todayOf(r); const n = d ? d.punches.filter(p => p.status === 'Active' && p.source === 'Kiosk' && !p.photo).length : 0; if (n) issues.push({ r, sev: 'red', what: 'Punch without photo', det: 'Check the iPad camera' }); });
-  // stores
-  const byStore = {};
-  rows.forEach(r => { (byStore[r.storeId || '—'] = byStore[r.storeId || '—'] || []).push(r); });
-  const storeIds = Object.keys(byStore).sort((a, b) => storeName(a).localeCompare(storeName(b)));
-  const kpi = (label, v, sub, cls, go) => { const tag = go ? 'button' : 'div'; return '<' + tag + ' class="of-kpi ' + (v && cls ? cls : '') + (!v ? ' zero' : '') + '" ' + (go ? 'data-go="' + go + '"' : '') + '><div class="of-eye">' + label + '</div><div class="v">' + v + '</div><div class="s">' + sub + '</div></' + tag + '>'; };
-  $('#offBody').innerHTML = '<div class="of-wrap">' +
-    '<div class="of-eye">Today</div><h1 class="of-h1">' + esc(longDate(t)) + '</h1>' +
-    '<div class="of-kpis five">' +
-      kpi('In now', inNow + '<small> / ' + H.people.length + '</small>', 'on the clock', '', '') +
-      kpi('Not in yet', notIn.length, 'past their start time', 'red', '') +
-      kpi('Late', late.length, 'today', 'amber', '') +
-      kpi('No clock-out', missing.length, 'earlier this week', 'red', 'week') +
-      kpi('Fixes', ready.length, 'ready to apply', 'amber', 'fixes') +
-    '</div>' +
-    '<section class="of-sec"><div class="of-sec-h"><h2>Needs attention</h2><span>' + (issues.length ? issues.length + ' item' + (issues.length > 1 ? 's' : '') : '') + '</span></div>' +
-    (issues.length ? issues.map(i => '<button class="of-row" ' + (i.go ? 'data-gotab="' + i.go + '"' : 'data-person="' + i.r.id + '"') + '><span class="of-mark ' + i.sev + '"></span><div><div class="nm">' + esc(i.r.name) + '</div><div class="sub">' + esc(storeName(i.r.storeId)) + '</div></div><div class="rt"><b>' + esc(i.what) + '</b>' + esc(i.det || '') + '</div></button>').join('')
-      : '<div class="of-ok"><span class="of-mark green"></span>Nothing needs attention right now.</div>') +
-    '</section>' +
-    '<section class="of-sec"><div class="of-sec-h"><h2>Stores</h2><span>' + storeIds.length + ' stores</span></div><div class="of-stores">' +
-    storeIds.map(id => {
-      const list = byStore[id].slice().sort((a, b) => a.name.localeCompare(b.name));
-      const n = list.filter(r => (ppl[r.id] || {}).status === 'in').length;
-      return '<div class="of-store"><h3>' + esc(storeName(id)) + '</h3><div class="cnt">' + n + ' of ' + list.length + ' clocked in</div><ul>' +
-        list.map(r => { const d = todayOf(r) || { flags: [] }; const p = ppl[r.id] || {}; const st = p.status === 'in' ? 'in' : (d.flags.includes('Not in yet') ? 'red' : '');
-          return '<li><span class="of-mark ' + st + '"></span>' + esc(r.name) + '<span class="t">' + (p.status === 'in' ? 'In ' + esc(d.firstIn || p.sinceLabel || '') : d.lastOut ? 'Out ' + esc(d.lastOut) : d.flags.includes('Not in yet') ? 'Not in yet' : '—') + '</span></li>'; }).join('') +
-        '</ul></div>';
-    }).join('') + '</div></section></div>';
-  $('#offBody').querySelectorAll('[data-person]').forEach(b => b.onclick = () => personDrawer(b.dataset.person, OFF.cur));
-  $('#offBody').querySelectorAll('[data-gotab]').forEach(b => b.onclick = () => { OFF.tab = b.dataset.gotab; officeRender(); });
-  $('#offBody').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { OFF.tab = b.dataset.go; if (b.dataset.go === 'week') { OFF.store = 'ALL'; OFF.week = H.currentWeek; OFF.probOnly = true; } officeRender(); });
-}
-
-/* ---- Fixes ---- */
-function renderFixes() {
-  const f = OFF.home.fixes || [];
-  const ready = f.filter(x => x.managerStatus === 'Approved'), wait = f.filter(x => x.managerStatus === 'Pending');
-  const when = x => dayName(x.date) + ' ' + x.date.slice(5).replace('-', '/') + (x.time ? ' at ' + fmtT(x.time) : '');
-  let first = true;
-  const card = (x, can) => '<div class="of-fix' + (first ? (first = false, ' cut') : '') + '"><div class="of-eye">' + esc(x.kind) + '</div><h3>' + esc(x.name) + '</h3>' +
-    '<div class="meta">' + esc(storeName(x.storeId)) + ' · ' + esc(when(x)) + (x.punchId ? ' · fixes ' + esc(x.punchLabel || x.punchId) : '') + '</div>' +
-    '<div class="meta"><b style="color:var(--navy)">' + esc(dayName(x.date)) + ' ' + esc(x.date.slice(5).replace('-', '/')) + ' as recorded:</b> ' + esc((x.day && x.day.length) ? x.day.join(' · ') : 'no punches') + '</div>' +
-    '<div class="why">' + esc(x.reason) + '</div>' +
-    '<div class="meta">Filed by ' + esc(x.requestedBy) + (x.manager ? ' · approved by ' + esc(x.manager) : ' · waiting for the store manager') + '</div>' +
-    '<div class="acts">' + (x.kind !== 'Remove punch' ? '<input type="time" class="of-inp" aria-label="Correct time" data-t="' + x.id + '" value="' + esc(x.time) + '">' : '') +
-      '<span class="of-sp"></span><button class="of-btn red" data-rj="' + x.id + '">Reject</button><button class="of-btn" data-ap="' + x.id + '"' + (can ? '' : ' data-force="1"') + '>' + (can ? 'Apply fix' : 'Apply anyway') + '</button></div></div>';
-  $('#offBody').innerHTML = '<div class="of-wrap"><div class="of-eye">Fixes</div><h1 class="of-h1">' + (ready.length ? ready.length + ' ready to apply' : 'Nothing to apply') + '</h1>' +
-    '<section class="of-sec"><div class="of-sec-h"><h2>Approved by the store manager</h2><span>' + ready.length + '</span></div>' + (ready.length ? ready.map(x => card(x, true)).join('') : '<div class="of-ok"><span class="of-mark green"></span>All caught up.</div>') + '</section>' +
-    '<section class="of-sec"><div class="of-sec-h"><h2>Waiting for the store manager</h2><span>' + wait.length + '</span></div>' + (wait.length ? wait.map(x => card(x, false)).join('') : '<div class="of-ok"><span class="of-mark"></span>None.</div>') + '</section></div>';
-  $('#offBody').querySelectorAll('[data-ap]').forEach(b => b.onclick = () => busy(b, async () => {
-    const id = b.dataset.ap, t = $('#offBody').querySelector('[data-t="' + id + '"]');
-    await oapi('applyFix', { requestId: id, time: t ? t.value : '', force: !!b.dataset.force }); toast('Fix applied'); await officeLoad();
-  }));
-  $('#offBody').querySelectorAll('[data-rj]').forEach(b => b.onclick = () => {
-    const el = drawer('<div class="of-eye">Reject fix</div><h3>Why?</h3><p class="lead">The employee sees this the next time they clock in.</p><div class="f"><textarea class="of-inp" id="rjN" style="width:100%;min-height:110px"></textarea></div><div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn red" data-g>Reject fix</button></div>');
-    const g = el.querySelector('[data-g]');
-    g.onclick = () => { if (!needReason('#rjN')) return; busy(g, async () => { await oapi('rejectFix', { requestId: b.dataset.rj, note: $('#rjN').value }); closeLayer(); toast('Fix rejected'); await officeLoad(); }); };
-  });
-}
-
-/* ---- Timesheets ---- */
-function addDaysIso(iso, n) { const p = iso.split('-').map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2] + n)).toISOString().slice(0, 10); }
-function niceDate(iso) { const p = iso.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
-const noPhotoCount = r => r.days.reduce((n, d) => n + d.punches.filter(p => p.status === 'Active' && p.source === 'Kiosk' && !p.photo).length, 0);
-async function getWeek(force) {
-  if (OFF.store === 'ALL' && OFF.week === OFF.home.currentWeek && OFF.cur && !force) return OFF.cur;
-  const key = OFF.store + '|' + OFF.week;
-  if (!OFF.weeks[key] || force) OFF.weeks[key] = await oapi('timesheet', { storeId: OFF.store, weekStart: OFF.week });
-  return OFF.weeks[key];
-}
-async function renderWeek() {
-  const stores = OFF.home.stores || [];
-  $('#offBody').innerHTML = '<div class="of-wrap"><div class="of-eye">Timesheets</div><h1 class="of-h1" id="wTitle">Week of ' + esc(niceDate(OFF.week)) + '</h1>' +
-    '<div class="of-bar"><select class="of-inp" id="wStore"><option value="ALL">All stores</option>' + stores.map(s => '<option value="' + s.id + '">' + esc(s.name) + '</option>').join('') + '</select>' +
-    '<div class="of-step"><button id="wPrev" aria-label="Previous week">' + CARET_L + '</button><div id="wLbl">' + esc(niceDate(OFF.week)) + '</div><button id="wNext" aria-label="Next week"' + (OFF.week >= OFF.home.currentWeek ? ' disabled' : '') + '>' + CARET_R + '</button></div>' +
-    '<button class="of-toggle' + (OFF.probOnly ? ' on' : '') + '" id="wProb"><i></i>Problems only</button>' +
-    '<span class="of-sp"></span><button class="of-btn alt" id="wCsv">Download CSV</button></div><div id="wList"><div class="of-skel" style="height:96px"></div><div class="of-skel"></div><div class="of-skel"></div></div></div>';
-  $('#wStore').value = OFF.store;
-  $('#wStore').onchange = e => { OFF.store = e.target.value; renderWeek(); };
-  $('#wPrev').onclick = () => { OFF.week = addDaysIso(OFF.week, -7); renderWeek(); };
-  $('#wNext').onclick = () => { if (OFF.week < OFF.home.currentWeek) { OFF.week = addDaysIso(OFF.week, 7); renderWeek(); } };
-  $('#wProb').onclick = () => { OFF.probOnly = !OFF.probOnly; $('#wProb').classList.toggle('on', OFF.probOnly); drawWeek(); };
-  let ts; try { ts = await getWeek(); } catch (e) { $('#wList').innerHTML = '<div class="of-empty">' + esc(e.message) + '</div>'; return; }
-  if (OFF.tab !== 'week') return;
-  OFF.ts = ts; drawWeek();
-}
-function drawWeek() {
-  const ts = OFF.ts; if (!ts) return;
-  $('#wTitle').textContent = 'Week ' + ts.week + ' · ' + niceDate(ts.weekStart) + ' – ' + niceDate(ts.weekEnd);
-  $('#wLbl').textContent = 'Week ' + ts.week;
-  $('#wCsv').onclick = () => csv(ts);
-  const problem = r => r.lateDays || r.earlyDays || r.openDays || r.totalHours > 40 || noPhotoCount(r);
-  const sev = r => (r.openDays || noPhotoCount(r) || r.totalHours > 40) ? 2 : problem(r) ? 1 : 0;
-  const sorted = ts.rows.slice().sort((a, b) => sev(b) - sev(a) || storeName(a.storeId).localeCompare(storeName(b.storeId)) || a.name.localeCompare(b.name));
-  const zeros = sorted.filter(r => !problem(r) && r.days.every(d => !d.punches.length));
-  const rows = sorted.filter(r => (!OFF.probOnly || problem(r)) && !zeros.includes(r));
-  const all = ts.rows, total = all.reduce((t, r) => t + r.totalHours, 0);
-  const kpi = (label, v, sub, cls) => '<div class="of-kpi ' + (v && cls ? cls : '') + (!v ? ' zero' : '') + '"><div class="of-eye">' + label + '</div><div class="v">' + v + '</div><div class="s">' + sub + '</div></div>';
-  $('#wList').innerHTML =
-    '<div class="of-kpis five">' + kpi('Total hours', fmtHours(total), all.length + ' people', '') + kpi('Late', all.reduce((n, r) => n + r.lateDays, 0), 'days this week', 'amber') +
-      kpi('Missing clock-outs', all.reduce((n, r) => n + r.openDays, 0), 'need a fix', 'red') + kpi('Over 40 hours', all.filter(r => r.totalHours > 40).length, 'people', 'red') +
-      kpi('No photo', all.reduce((n, r) => n + noPhotoCount(r), 0), 'punches', 'red') + '</div>' +
-    '<section class="of-sec"><div class="of-sec-h"><h2>' + (OFF.probOnly ? 'People with problems' : 'Everyone') + '</h2><span>' + rows.length + '</span></div>' +
-    (rows.length ? rows.map(r => {
-      const np = noPhotoCount(r), open = OFF.open[r.id];
-      const pills = (r.totalHours > 40 ? '<span class="of-tag red">Over 40 h</span>' : '') + (r.openDays ? '<span class="of-tag red">Missing clock-out ' + r.openDays + '×</span>' : '') + (np ? '<span class="of-tag red">No photo ' + np + '×</span>' : '') +
-        (r.lateDays ? '<span class="of-tag amber">Late ' + r.lateDays + '×</span>' : '') + (r.earlyDays ? '<span class="of-tag amber">Left early ' + r.earlyDays + '×</span>' : '');
-      return '<div class="of-person"><button class="of-row" data-p="' + r.id + '" aria-expanded="' + (open ? 'true' : 'false') + '"><span class="of-mark ' + (problem(r) ? (r.openDays || np || r.totalHours > 40 ? 'red' : 'amber') : r.totalHours ? 'green' : '') + '"></span><div><div class="nm">' + esc(r.name) + '</div><div class="sub">' + esc(storeName(r.storeId)) + '</div><div>' + pills + '</div></div><div class="rt"><span class="of-big">' + hrs(r.totalHours) + '</span><span class="of-dec">' + r.totalHours.toFixed(2) + ' h' + (r.totalHours > 40 ? ' · 40.00 reg + ' + (r.totalHours - 40).toFixed(2) + ' OT' : '') + '</span></div></button>' +
-        (open ? daysHtml(r) : '') + '</div>';
-    }).join('') : '<div class="of-ok"><span class="of-mark green"></span>' + (OFF.probOnly ? 'No problems this week.' : 'No one in this view.') + '</div>') +
-    (zeros.length && !OFF.probOnly ? '<div class="of-zero">No hours this week: ' + zeros.map(r => esc(r.name)).join(', ') + '</div>' : '') + '</section>';
-  $('#wList').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { OFF.open[b.dataset.p] = !OFF.open[b.dataset.p]; drawWeek(); });
-  wireDays($('#wList'), ts);
-}
-function shortSched(s) { return String(s || '').replace(/:00/g, '').replace(/ ?AM/g, '').replace(/ ?PM/g, ''); }
-function daysHtml(r) {
-  const today = OFF.home.today;
-  return '<div class="of-days">' + r.days.filter(d => d.date <= today).map(d => '<div class="of-day"><div class="d"><b>' + d.dow + '</b><span>' + niceDate(d.date) + (d.schedule ? ' · ' + esc(shortSched(d.schedule)) : '') + '</span></div><div>' +
-    d.punches.map(p => { const np = p.status === 'Active' && p.source === 'Kiosk' && !p.photo;
-      return '<button class="of-chip ' + (p.status !== 'Active' ? 'v ' : '') + (p.source !== 'Kiosk' ? 'fx ' : '') + (np ? 'np' : '') + '" data-pid="' + p.id + '" data-emp="' + r.id + '"><i>' + (p.type === 'IN' ? 'In' : 'Out') + '</i>' + esc(p.time) + (p.storeId !== r.storeId ? ' · ' + esc(storeName(p.storeId)) : '') + (p.source !== 'Kiosk' ? ' <span class="ed">edited</span>' : '') + (np ? ' <span class="np">no photo</span>' : '') + '</button>'; }).join('') +
-    '<button class="of-add" data-add="' + r.id + '" data-day="' + d.date + '">' + PLUS + 'Add punch</button>' +
-    '<div class="of-flags">' + tags(d.flags) + '</div></div><div class="h">' + (d.hours ? hrs(d.hours) : '') + '</div></div>').join('') + '</div>';
-}
-function wireDays(root, ts) {
-  root.querySelectorAll('[data-pid]').forEach(b => b.onclick = () => punchEditor(ts, b.dataset.emp, b.dataset.pid));
-  root.querySelectorAll('[data-add]').forEach(b => b.onclick = () => punchAdder(ts, b.dataset.add, b.dataset.day));
-}
-function personDrawer(empId, ts) {
-  const r = ts.rows.find(x => x.id === empId); if (!r) return;
-  const el = drawer('<div class="of-eye">' + esc(storeName(r.storeId)) + ' · Week ' + ts.week + '</div><h3>' + esc(r.name) + '</h3><p class="lead">' + hrs(r.totalHours) + ' this week</p>' + daysHtml(r));
-  wireDays(el, ts);
-}
-function findPunch(ts, empId, pid) {
-  const r = ts.rows.find(x => x.id === empId);
-  for (const d of r.days) for (const p of d.punches) if (p.id === pid) return { r, d, p };
-}
-async function afterEdit(msg) {
-  closeLayer(); toast(msg);
-  OFF.weeks = {};
-  await officeLoad();
-  if (OFF.tab === 'week') renderWeek();
-}
-function punchEditor(ts, empId, pid) {
-  const { r, p } = findPunch(ts, empId, pid);
-  const dt = p.at.slice(0, 16).replace(' ', 'T');
-  const active = p.status === 'Active';
-  const el = drawer('<div class="of-eye">' + (p.source === 'Kiosk' ? 'Punched at the store' : 'Added by the office') + (active ? '' : ' · removed') + '</div><h3>' + esc(r.name) + '</h3>' +
-    '<p class="lead">' + (p.type === 'IN' ? 'Clock in' : 'Clock out') + ' · ' + esc(dayName(p.at.slice(0, 10))) + ' ' + esc(niceDate(p.at.slice(0, 10))) + ' at ' + esc(p.time) + '</p>' +
-    (p.photo ? '<a href="' + esc(p.photo) + '" target="_blank" rel="noopener" class="of-btn alt" style="display:inline-flex;align-items:center;margin-bottom:18px">Open punch photo</a>' : (p.source === 'Kiosk' ? '<p class="lead" style="color:var(--red)">No photo was taken for this punch.</p>' : '')) +
-    (p.notes ? '<p class="lead">' + esc(p.notes) + '</p>' : '') +
-    (active ? '<div class="f"><label class="of-eye">Type</label><select class="of-inp" id="eTy"><option value="IN"' + (p.type === 'IN' ? ' selected' : '') + '>Clock in</option><option value="OUT"' + (p.type === 'OUT' ? ' selected' : '') + '>Clock out</option></select></div>' +
-      '<div class="f"><label class="of-eye">Date and time</label><input type="datetime-local" class="of-inp" id="eAt" value="' + dt + '"></div>' +
-      '<div class="f"><label class="of-eye">Reason (kept in the edit log)</label><textarea class="of-inp" id="eWhy" style="min-height:90px"></textarea></div>' +
-      '<div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn" data-s>Save change</button></div>' +
-      '<button class="of-btn red" data-v style="width:100%;margin-top:12px">Remove this punch</button>' : '<div class="acts"><button class="of-btn alt" data-c>Close</button></div>'));
-  const s = el.querySelector('[data-s]');
-  if (s) s.onclick = () => { if (!needReason('#eWhy')) return; busy(s, async () => { await oapi('editPunch', { punchId: pid, time: $('#eAt').value, type: $('#eTy').value, reason: $('#eWhy').value }); await afterEdit('Saved'); }); };
-  const v = el.querySelector('[data-v]');
-  if (v) v.onclick = () => {
-    if (!needReason('#eWhy')) return;
-    if (v.dataset.sure !== '1') { v.dataset.sure = '1'; v.textContent = 'Tap again to remove'; return; }
-    busy(v, async () => { await oapi('voidPunch', { punchId: pid, reason: $('#eWhy').value }); await afterEdit('Punch removed (kept in the log)'); });
-  };
-}
-function punchAdder(ts, empId, day) {
-  const r = ts.rows.find(x => x.id === empId);
-  const el = drawer('<div class="of-eye">Add punch</div><h3>' + esc(r.name) + '</h3><p class="lead">' + esc(longDate(day)) + '</p>' +
-    '<div class="f"><label class="of-eye">Type</label><select class="of-inp" id="aTy"><option value="IN">Clock in</option><option value="OUT">Clock out</option></select></div>' +
-    '<div class="f"><label class="of-eye">Time</label><input type="time" class="of-inp" id="aAt"></div>' +
-    '<div class="f"><label class="of-eye">Store</label><select class="of-inp" id="aSt">' + (OFF.home.stores || []).map(s => '<option value="' + s.id + '"' + (s.id === r.storeId ? ' selected' : '') + '>' + esc(s.name) + '</option>').join('') + '</select></div>' +
-    '<div class="f"><label class="of-eye">Reason (kept in the edit log)</label><textarea class="of-inp" id="aWhy" style="min-height:90px"></textarea></div>' +
-    '<div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn" data-s>Add punch</button></div>');
-  const sb = el.querySelector('[data-s]');
-  sb.onclick = () => {
-    if (!$('#aAt').value) { $('#aAt').classList.add('err'); $('#aAt').focus(); return; }
-    if (!needReason('#aWhy')) return;
-    busy(sb, async () => { await oapi('addPunch', { employeeId: empId, storeId: $('#aSt').value, type: $('#aTy').value, time: day + ' ' + $('#aAt').value, reason: $('#aWhy').value }); await afterEdit('Punch added'); });
-  };
-}
-function drawer(inner) {
-  const el = openLayer('<div class="p"><button class="x" data-c aria-label="Close">' + OICON.x + '</button>' + inner + '</div>', 'of-dr');
-  el.onclick = e => { if (e.target === el) closeLayer(); };
-  el.querySelectorAll('[data-c]').forEach(b => b.onclick = () => closeLayer());
-  return el;
-}
-function csv(ts) {
-  const lines = [['Week', 'Store', 'Employee ID', 'Name', 'Date', 'Day', 'First In', 'Last Out', 'Hours', 'Scheduled', 'Late (min)', 'Left Early (min)', 'Flags']];
-  ts.rows.forEach(r => r.days.forEach(d => lines.push([ts.week, storeName(r.storeId), r.id, r.name, d.date, d.dow, d.firstIn, d.lastOut, d.hours, d.schedule, d.lateMin || '', d.earlyMin || '', d.flags.join('; ')])));
-  ts.rows.forEach(r => lines.push([ts.week, storeName(r.storeId), r.id, r.name, 'WEEK TOTAL', '', '', '', r.totalHours, '', '', '', r.totalHours > 40 ? 'Over 40 h' : '']));
-  const text = lines.map(l => l.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' }));
-  a.download = ts.weekStart + ' timesheet | week ' + ts.week + ' | ' + (ts.storeId === 'ALL' ? 'all stores' : storeName(ts.storeId)) + '.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-}
-
-/* ---- Devices ---- */
-function renderDevices() {
-  const d = OFF.home.devices || [];
-  const pname = id => (OFF.home.people.find(p => p.id === id) || {}).name || '';
-  $('#offBody').innerHTML = '<div class="of-wrap"><div class="of-eye">Devices</div><h1 class="of-h1">' + d.filter(x => x.status === 'Active').length + ' active</h1>' +
-    '<div class="of-bar"><span class="of-sp"></span><button class="of-btn" id="dAdd">Add a device</button></div>' +
-    '<section class="of-sec"><div class="of-sec-h"><h2>Store iPads and phones</h2><span>' + d.length + '</span></div>' +
-    (d.length ? d.map(x => '<div class="of-row"><span class="of-mark ' + (x.status === 'Active' ? 'green' : 'amber') + '"></span><div><div class="nm">' + esc(x.name) + '</div><div class="sub">' + esc(storeName(x.storeId)) +
-      ' · ' + esc(x.id.slice(-4)) + (x.status === 'Active' ? ' · last seen ' + esc(friendlyStamp(x.lastSeen)) + (stampMs(x.lastSeen) && Date.now() - stampMs(x.lastSeen) > 86400000 ? ' <span class="of-tag amber">Not seen in 24 h</span>' : '') : ' · setup code <b style="color:var(--navy);letter-spacing:.08em">' + esc(x.code) + '</b>') + '</div></div>' +
-      '<div class="rt"><button class="of-btn red" data-rv="' + x.id + '">Remove</button></div></div>').join('') : '<div class="of-ok">No devices yet. Add one for each store iPad and each Jacksonville phone.</div>') + '</section>' +
-    '<p style="color:var(--steel);font-size:14px;line-height:1.7;max-width:640px">On the iPad or phone, open the app link in Safari or Chrome. Tap Share › Add to Home Screen (on Android: menu › Install app). Open the new P1 Clock icon and enter the setup code. On store iPads, turn on Guided Access so the app stays on screen. Removing a device stops it from punching right away.</p></div>';
-  $('#dAdd').onclick = () => {
-    const el = drawer('<div class="of-eye">Add a device</div><h3>New setup code</h3><p class="lead">Creates a one-time code to enter on the iPad or phone.</p>' +
-      '<div class="f"><label class="of-eye">Store</label><select class="of-inp" id="dSt">' + (OFF.home.stores || []).map(s => '<option value="' + s.id + '">' + esc(s.name) + '</option>').join('') + '</select></div>' +
-      '<div class="f"><label class="of-eye">Type</label><select class="of-inp" id="dTy"><option value="">Store iPad (whole crew)</option><option value="p">Personal phone (one person)</option></select></div>' +
-      '<div class="f hidden" id="dPF"><label class="of-eye">Whose phone</label><select class="of-inp" id="dPe"></select></div>' +
-      '<div class="f"><label class="of-eye">Name (optional)</label><input class="of-inp" id="dNm" placeholder="e.g. Wendell iPad"></div>' +
-      '<div class="acts"><button class="of-btn alt" data-c>Cancel</button><button class="of-btn" data-s>Create code</button></div>');
-    const fill = () => { $('#dPe').innerHTML = OFF.home.people.filter(p => p.storeId === $('#dSt').value).map(p => '<option value="' + p.id + '">' + esc(p.name) + '</option>').join(''); };
-    $('#dTy').onchange = () => { $('#dPF').classList.toggle('hidden', !$('#dTy').value); fill(); };
-    $('#dSt').onchange = fill;
-    const cb = el.querySelector('[data-s]');
-    cb.onclick = () => busy(cb, async () => {
-      {
-        const r = await oapi('newDeviceCode', { storeId: $('#dSt').value, name: $('#dNm').value, employeeId: $('#dTy').value ? $('#dPe').value : '' });
-        el.querySelector('.p').innerHTML = '<div class="of-eye">' + esc(r.store) + '</div><h3>Setup code</h3><div class="of-code">' + esc(r.code) + '</div><p class="lead">Enter it on the device within ' + esc(r.expires) + '. It works once.</p><div class="acts"><button class="of-btn" data-done>Done</button></div>';
-        el.querySelector('[data-done]').onclick = () => { closeLayer(); officeLoad(); };
-      }
-    });
-  };
-  $('#offBody').querySelectorAll('[data-rv]').forEach(b => b.onclick = async () => {
-    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Tap again'; return; }
-    busy(b, async () => { await oapi('revokeDevice', { deviceId: b.dataset.rv }); toast('Device removed'); await officeLoad(); });
-  });
-}
+/* ---------------- idle reset ----------------
+   After 5 minutes untouched the app goes back to its start screen. The next tap refreshes the store's
+   list (new hires, people who left). Otherwise the list updates with every punch, and on the nightly
+   reload — no polling. */
+const RESET_MS = 5 * 60000;
+let lastTouch = Date.now();
+setInterval(() => {
+  if (STALE || $('#kiosk').classList.contains('hidden') || Date.now() - lastTouch < RESET_MS) return;
+  closeLayer(); const r = document.querySelector('.roster'); if (r) r.scrollTop = 0;
+  STALE = true;
+}, 15000);
+['touchstart', 'mousedown', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
+  lastTouch = Date.now();
+  if (STALE && !$('#kiosk').classList.contains('hidden')) { STALE = false; loadRoster(true); flushQueue(); }
+}, { passive: true, capture: true }));
 
 /* ---------------- self-update ----------------
    The backend tells every response which app version is current. When it differs, or once a night
@@ -1227,7 +744,7 @@ function renderDevices() {
    The service worker fetches app files from the network first, so a reload always gets the newest. */
 let lastNightly = new Date().toDateString();
 setInterval(() => {
-  const idle = !$('#layer').innerHTML && $('#office').classList.contains('hidden');
+  const idle = !$('#layer').innerHTML;
   const now = new Date();
   const nightly = now.getHours() === 3 && lastNightly !== now.toDateString();
   let lastReload = 0; try { lastReload = +(localStorage.getItem('p1.reloadAt') || 0); } catch (e) {}
@@ -1243,7 +760,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && st
    Daily welcome intro (approved Oct 29). Plays once per device per day,
    on the first open of the kiosk after 5 AM. The app loads underneath; a
    it can't be skipped, and taps during it are swallowed so they never reach the tiles; it never plays over an open
-   punch, on the Setup or Office screens, or with reduced motion.
+   punch, on the Setup screen, or with reduced motion.
    ===================================================================== */
 var INTRO = { maybe(){}, play(){} };
 try { INTRO = (function(){
@@ -1321,7 +838,7 @@ try { INTRO = (function(){
     maybe() {
       if (playing || document.hidden) return;
       if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      if ($('#kiosk').classList.contains('hidden')) return;     // kiosk only: not Setup or Office
+      if ($('#kiosk').classList.contains('hidden')) return;     // kiosk only: not Setup
       if (new Date().getHours() < 5) return;                     // not for the 3 AM self-update
       if (store.get('p1.introDay') === today()) return;          // once per device per day
       if ($('#layer').innerHTML) return;                          // never over an open punch
@@ -1337,13 +854,10 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) try 
    boot
    ===================================================================== */
 LOGO.setAttribute('d', LOGO_D);
-$('#markPath1').setAttribute('d', MARK_D); $('#markPath2').setAttribute('d', MARK_D); $('#markPath3').setAttribute('d', MARK_D);
+$('#markPath1').setAttribute('d', MARK_D);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 (function boot() {
-  let t = null; try { t = JSON.parse(sessionStorage.getItem('p1.office') || store.get('p1.office') || 'null'); } catch (e) {}
-  if (t && t.token && t.until > Date.now()) { OFF.token = t.token; show('office'); officeLoad(); return; }
   if (store.get('p1.device')) startKiosk(); else show('setup');
-  if (/[?&]office\b/.test(location.search) && !store.get('p1.device')) show('osign');
 })();
 </script>
 </body>
