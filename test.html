@@ -408,6 +408,8 @@ function renderTiles() {
     if (rec && Date.now() - rec.at < 115000) return undoSheet(p, rec);
     if (p.pin === 'locked') return lockedSheet(p.name);
     if (p.pin === 'none') return setupSheet({ employeeId: p.id, title: p.name });
+    // One break per shift: after the break, the only choice is Clock out (straight to the camera and PIN).
+    if (!p.elsewhere && p.status === 'in' && p.breakTaken) return pinSheet({ employeeId: p.id, title: p.name, action: 'out', label: 'Clock out', lead: 'Break already taken today.' });
     if (!p.elsewhere && (p.status === 'in' || p.status === 'break')) return choiceSheet(p);
     pinSheet({ employeeId: p.id, title: p.name, label: p.elsewhere ? 'Switch to this store' : 'Clock in' });
   });
