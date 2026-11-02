@@ -466,7 +466,7 @@ function undoSheet(p, rec) {
    use) between punches. The photo is cropped here to one fixed head-and-shoulders framing (ZOOM),
    the same on every iPad, then shrunk to a small JPEG before it is sent.
    Cancelled the camera? The punch still goes through, marked "no photo" for the office. */
-const ZOOM = 2;                 // 1 = full frame; 2 = head and shoulders on an iPad 9th gen front camera
+const ZOOM = 1.2;               // 1 = full frame; higher = closer. Set wide after Andre's first test (2 was far too close)
 // GEN changes every time a photo sheet opens or closes, so a slow photo can never land on someone else's punch.
 let PHOTO = '', PHOTO_P = null, SHOT_BOX = null, GEN = 0, CAM_OPEN = false;
 const SHOT = document.createElement('input');
@@ -498,7 +498,9 @@ function cropPhoto(file) {
       try {
         const w = img.naturalWidth, h = img.naturalHeight, s = Math.min(w, h) / ZOOM, c = document.createElement('canvas');
         c.width = c.height = 240;
-        c.getContext('2d').drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, 240, 240);
+        const g = c.getContext('2d');
+        g.translate(240, 0); g.scale(-1, 1);          // mirror it, so it matches what the camera showed
+        g.drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, 240, 240);
         ok(c.toDataURL('image/jpeg', 0.72));
       } catch (e) { no(e); } finally { URL.revokeObjectURL(url); }
     };
@@ -691,7 +693,7 @@ function submitPunch(o, pin, ctx, photo) {
 }
 function payload(job, flags) {
   const later = !!(flags && flags.photoLater);
-  return Object.assign({ pin: job.pin, photo: later ? '' : job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess, action: job.action || '' }, job.who, job.flags || {}, flags || {});
+  return Object.assign({ pin: job.pin, photo: later ? '' : job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess, punchAction: job.action || '' }, job.who, job.flags || {}, flags || {});
 }
 /** Sends the punch photo after the punch is saved, so nobody waits for Google Drive. One retry. */
 function sendPhoto(job, r) {
@@ -754,7 +756,7 @@ function punchError(o, job, e, ctx) {
   const w = String(e.message).match(/^PIN_WAIT:(\d+):(\d+)/);
   if (w) return ctx.wait(+w[1], +w[2]);
   if (!isFinal(e)) {   // Google is busy or hiccuped: keep the punch and send it in a moment
-    qPut(job).then(() => { savedOffline(job); setDoneStatus('Saved on this iPad. Google was busy; it’s sent in a moment.', 'warn'); });
+    qPut(job).then(() => { savedOffline(job); setDoneStatus('Saved on this iPad. It will send by itself in a moment.', 'warn'); });
     return;
   }
   if (e.message === 'NOT_ON_FILE' && o.phone) { closeLayer(); return phoneSheet(friendly(e)); }
