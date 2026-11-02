@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="P1 TEST">
+<meta name="apple-mobile-web-app-title" content="Prime One TEST">
 <meta name="theme-color" content="#161C27">
 <link rel="manifest" href="manifest-test.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -164,6 +164,12 @@ textarea.inp{min-height:90px;resize:vertical}
 .spin+.spin{margin-left:6px}
 @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
 
+/* ---------- install ---------- */
+.steps{list-style:none;counter-reset:st;margin:0;padding:0}
+.steps li{counter-increment:st;position:relative;padding:14px 0 14px 52px;border-top:1px solid var(--line-d);font-size:18px;line-height:1.45;color:#fff}
+.steps li::before{content:counter(st);position:absolute;left:0;top:12px;width:34px;height:34px;border:1px solid var(--silver);display:flex;align-items:center;justify-content:center;font-weight:600}
+.steps b{font-weight:600}
+
 /* ---------- setup ---------- */
 .center{flex:1;display:flex;align-items:safe center;justify-content:center;padding:28px;overflow:auto;-webkit-overflow-scrolling:touch}
 .setup{width:min(440px,100%)}
@@ -187,6 +193,17 @@ textarea.inp{min-height:90px;resize:vertical}
 </style>
 </head>
 <body>
+
+<!-- ============ INSTALL (opened in the browser, not from the icon) ============ -->
+<section id="install" class="screen hidden">
+  <div class="center"><div class="setup">
+    <svg class="logo" viewBox="211 199 624 736" aria-label="Prime One"><path fill="#fff" fill-rule="evenodd" id="logoPath2"/></svg>
+    <div class="label">Time clock</div>
+    <h1>Install Prime One Clock</h1>
+    <p>The clock only works from its icon on the Home Screen, not in the browser.</p>
+    <ol class="steps" id="installSteps"></ol>
+  </div></div>
+</section>
 
 <!-- ============ SETUP ============ -->
 <section id="setup" class="screen hidden">
@@ -297,7 +314,7 @@ async function api(action, data) {
 
 /* ---------------- screens ---------------- */
 function show(id) {
-  ['setup','kiosk'].forEach(s => $('#' + s).classList.toggle('hidden', s !== id));
+  ['install','setup','kiosk'].forEach(s => $('#' + s).classList.toggle('hidden', s !== id));
   closeLayer();
 }
 function toast(t, ms) {
@@ -1055,6 +1072,26 @@ LOGO.setAttribute('d', LOGO_D);
 $('#markPath1').setAttribute('d', MARK_D);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 (function boot() {
+  // Opened in Safari/Chrome instead of from the Home Screen icon: show only how to install it.
+  // (?browser in the link skips this, for testing on a laptop.)
+  const installed = navigator.standalone === true || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
+  if (!installed && !/[?&]browser\b/.test(location.search)) {
+    const lp = document.getElementById('logoPath2'); if (lp) lp.setAttribute('d', LOGO_D);
+    const android = /android/i.test(navigator.userAgent);
+    $('#installSteps').innerHTML = (android ? [
+      'Tap the <b>⋮</b> menu at the top right of Chrome.',
+      'Tap <b>Install app</b> (or <b>Add to Home screen</b>), then <b>Install</b>.',
+      'Open the new <b>Prime One Clock</b> icon on your Home Screen.',
+      'Come back here and close this tab.'
+    ] : [
+      'Tap the <b>Share</b> button (the square with an arrow) in Safari.',
+      'Tap <b>Add to Home Screen</b>, then <b>Add</b>.',
+      'Open the new <b>Prime One Clock</b> icon on the Home Screen.',
+      'Come back to Safari and close this tab: tap the tabs button and swipe this page away.'
+    ]).map(t => '<li>' + t + '</li>').join('');
+    show('install');
+    return;
+  }
   if (store.get('p1.device')) startKiosk(); else show('setup');
 })();
 </script>

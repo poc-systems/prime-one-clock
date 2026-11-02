@@ -1,6 +1,6 @@
 {
   "name": "Prime One Clock TEST",
-  "short_name": "P1 TEST",
+  "short_name": "Prime One TEST",
   "start_url": "./test.html",
   "scope": "./",
   "display": "standalone",
