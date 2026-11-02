@@ -196,7 +196,6 @@ textarea.inp{min-height:90px;resize:vertical}
     <h1>Set up this device</h1>
     <p>Enter the 6-digit iPad code from the office (Juliana or Andre). This links this iPad or phone to one store. It only needs to be done once.</p>
     <div class="field"><label class="label" for="setupCode">iPad code</label><input id="setupCode" class="inp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000"></div>
-    <div class="field"><label class="label" for="setupName">Device name (optional)</label><input id="setupName" class="inp" maxlength="60" placeholder="e.g. Wendell iPad"></div>
     <button class="big" id="setupGo">Activate</button>
     <div class="msg" id="setupMsg"></div>
 
@@ -337,7 +336,7 @@ $('#setupGo').onclick = async () => {
   $('#setupMsg').textContent = '';
   $('#setupGo').disabled = true; $('#setupGo').innerHTML = '<span class="spin"></span>';
   try {
-    const r = await api('setupDevice', { code, name: $('#setupName').value.trim(), device: '' });
+    const r = await api('setupDevice', { code, device: '' });
     store.set('p1.device', r.device);
     store.set('p1.storeName', r.storeName);
     startKiosk();
