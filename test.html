@@ -77,7 +77,10 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .body{padding:22px 28px 28px}
 
 .cam{position:relative;width:180px;height:180px;margin:0 auto 20px;background:var(--deep);overflow:hidden}
-.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);transform-origin:50% 50%}
+.cam{display:block;padding:0;border:1px solid var(--line-d);cursor:pointer}
+.cam img{width:100%;height:100%;object-fit:cover;display:none}
+.cam.has img{display:block}
+.cam.has .nocam{top:auto;bottom:0;inset:auto 0 0 0;background:rgba(22,28,39,.72);padding:6px;font-size:12px;color:#fff}
 .cam .nocam{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--silver);font-size:13px;padding:14px}
 .dots{display:flex;justify-content:center;gap:14px;margin-bottom:22px}
 .dots span{width:46px;height:56px;border:1px solid var(--line-d);display:flex;align-items:center;justify-content:center;font-size:26px}
@@ -323,7 +326,7 @@ setInterval(tick, 1000);
 let idleT;
 function bumpIdle() {
   clearTimeout(idleT);
-  idleT = setTimeout(() => { if (!$('#kiosk').classList.contains('hidden') && $('#layer').innerHTML && !CUR_DONE) closeLayer(); }, IDLE_MS);
+  idleT = setTimeout(() => { if (CAM_OPEN) return bumpIdle(); if (!$('#kiosk').classList.contains('hidden') && $('#layer').innerHTML && !CUR_DONE) closeLayer(); }, IDLE_MS);
 }
 ['touchstart','mousedown','keydown'].forEach(ev => document.addEventListener(ev, bumpIdle, { passive: true }));
 
@@ -353,7 +356,7 @@ function startKiosk() {
   $('#storeName').textContent = store.get('p1.storeName') || 'Prime One';
   try { const c = JSON.parse(store.get('p1.roster') || 'null'); if (c && c.people) { ROSTER = c; renderTiles(); } } catch (e) {}
   if (!(ROSTER.people || []).length) $('#emptyRoster').classList.remove('hidden'), $('#emptyRoster').innerHTML = '<span class="spin"></span><span class="spin"></span><span class="spin"></span> Loading this store’s list…';
-  loadRoster(); flushQueue(); renderRejected(); warmCam();
+  loadRoster(); flushQueue(); renderRejected();
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   try { if (window.INTRO) INTRO.maybe(); } catch (e) {}
 }
@@ -431,55 +434,68 @@ function undoSheet(p, rec) {
 }
 
 /* ---------------- camera ----------------
-   The camera is opened ONCE when the app starts and kept for the whole session, so iPadOS asks for
-   permission once per app launch instead of on every punch. Between punches the video track is paused
-   (enabled = false), which saves battery and heat. Only the punch screen shows the picture.
-   ZOOM is a fixed digital crop, the same on every iPad: the preview shows exactly what is saved. */
-const ZOOM = 2;                 // 1 = full ultra-wide frame; 2 = head and shoulders on an iPad 9th gen
-let CAM = null, CAM_P = null, CAM_DENIED = false, CAM_READY = false;
-function camTrack() { return CAM && CAM.getVideoTracks()[0]; }
-/** Live and not muted by iPadOS (it mutes, rather than ends, the camera after sleep or backgrounding). */
-function camLive() { const t = camTrack(); return !!t && t.readyState === 'live' && !t.muted; }
-function getCam() {
-  if (camLive()) return Promise.resolve(CAM);
-  if (CAM_DENIED) return Promise.reject(new Error('denied'));
-  if (CAM_P) return CAM_P;
-  if (CAM) { try { CAM.getTracks().forEach(t => t.stop()); } catch (e) {} CAM = null; }
-  CAM_P = navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
-    .then(st => { CAM = st; const t = st.getVideoTracks()[0]; if (t) t.addEventListener('ended', () => { if (CAM === st) CAM = null; }); return st; })
-    .catch(e => { if (e && e.name === 'NotAllowedError') CAM_DENIED = true; throw e; })   // asked and refused: don't ask again this session
-    .finally(() => { CAM_P = null; });
-  return CAM_P;
+   Option 1 (Andre, Nov 2): the photo comes from the iPad's own camera screen, not a live camera
+   inside the page. Tapping a name opens the camera; they tap the shutter, then "Use Photo".
+   iPadOS never asks for camera permission this way, and nothing runs (no green dot, no battery
+   use) between punches. The photo is cropped here to one fixed head-and-shoulders framing (ZOOM),
+   the same on every iPad, then shrunk to a small JPEG before it is sent.
+   Cancelled the camera? The punch still goes through, marked "no photo" for the office. */
+const ZOOM = 2;                 // 1 = full frame; 2 = head and shoulders on an iPad 9th gen front camera
+// GEN changes every time a photo sheet opens or closes, so a slow photo can never land on someone else's punch.
+let PHOTO = '', PHOTO_P = null, SHOT_BOX = null, GEN = 0, CAM_OPEN = false;
+const SHOT = document.createElement('input');
+SHOT.type = 'file'; SHOT.accept = 'image/*'; SHOT.setAttribute('capture', 'user');
+SHOT.setAttribute('aria-hidden', 'true'); SHOT.tabIndex = -1;
+SHOT.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';   // not display:none: iOS may refuse to open it
+document.body.appendChild(SHOT);
+function camNote(box, t) { const n = box.querySelector('.nocam'); n.textContent = t; box.setAttribute('aria-label', t); }
+SHOT.addEventListener('change', () => {
+  CAM_OPEN = false;
+  const f = SHOT.files && SHOT.files[0], box = SHOT_BOX, gen = GEN;
+  SHOT.value = '';
+  if (!f || !box || !document.body.contains(box)) return;
+  camNote(box, 'Saving photo…');
+  PHOTO_P = cropPhoto(f).then(src => {
+    if (gen !== GEN || SHOT_BOX !== box) return '';               // sheet changed meanwhile: throw it away
+    PHOTO = src; box.querySelector('img').src = src; box.classList.add('has'); camNote(box, 'Photo taken. Tap to retake');
+    return src;
+  }).catch(() => { if (gen === GEN) camNote(box, 'Photo didn’t work. Tap to try again.'); return ''; });
+});
+// Back from the camera without a photo (Cancel): the sheet stays, the idle timer runs again.
+window.addEventListener('focus', () => setTimeout(() => { CAM_OPEN = false; }, 1500));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(() => { CAM_OPEN = false; }, 1500); });
+/** Center square, zoomed in by ZOOM, 240×240 JPEG (about 10–15 KB). Safari draws the photo upright. */
+function cropPhoto(file) {
+  return new Promise((ok, no) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth, h = img.naturalHeight, s = Math.min(w, h) / ZOOM, c = document.createElement('canvas');
+        c.width = c.height = 240;
+        c.getContext('2d').drawImage(img, (w - s) / 2, (h - s) / 2, s, s, 0, 0, 240, 240);
+        ok(c.toDataURL('image/jpeg', 0.72));
+      } catch (e) { no(e); } finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); no(new Error('bad image')); };
+    img.src = url;
+  });
 }
-function camActive(on) { const t = camTrack(); if (t) { try { t.enabled = on; } catch (e) {} } if (!on) CAM_READY = false; }
-/** Opened at app start, and again when the app comes back if iPadOS muted or ended it; then paused. */
-function warmCam() { if (!navigator.mediaDevices || camLive()) return; getCam().then(() => { if (!$('#layer video')) camActive(false); }).catch(() => {}); }
-async function startCam(box) {
-  const v = box.querySelector('video');
-  v.style.transform = 'scaleX(-1) scale(' + ZOOM + ')';
-  CAM_READY = false;
-  try {
-    const st = await getCam();
-    if (!document.body.contains(v)) { if (!$('#layer video')) camActive(false); return; }   // sheet closed meanwhile
-    camActive(true);
-    v.srcObject = st; v.setAttribute('playsinline', ''); v.muted = true; await v.play();
-    // Only a frame delivered after resuming counts, so a paused camera never gives a black or old photo.
-    if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(() => { if (document.body.contains(v)) CAM_READY = true; });
-    else setTimeout(() => { if (document.body.contains(v)) CAM_READY = true; }, 400);
-    box.querySelector('.nocam').classList.add('hidden');
-  } catch (e) {
-    box.querySelector('.nocam').textContent = 'Camera is off. The punch will be saved without a photo.';
-  }
+function openCamera(box) { SHOT_BOX = box; CAM_OPEN = true; try { SHOT.click(); } catch (e) { CAM_OPEN = false; } }
+/** A PIN sheet with a photo opened. From a tap, the camera opens at once. When the sheet is shown
+ * again after an error, the photo already taken is kept (and the camera isn't reopened). */
+function startCam(box, keep) {
+  GEN++; PHOTO = ''; PHOTO_P = null; SHOT_BOX = box;
+  box.onclick = () => openCamera(box);
+  if (keep) { PHOTO = keep; box.querySelector('img').src = keep; box.classList.add('has'); camNote(box, 'Photo taken. Tap to retake'); return; }
+  openCamera(box);
 }
-/** Pauses the camera; never closes it (closing it is what makes iPadOS ask again). */
-function stopCam() { const v = document.querySelector('#layer video'); if (v) v.srcObject = null; camActive(false); }
-function snap() {
-  const v = document.querySelector('#layer video');
-  if (!v || !v.videoWidth || !CAM_READY) return '';
-  const s = Math.min(v.videoWidth, v.videoHeight) / ZOOM, c = document.createElement('canvas');
-  c.width = c.height = 240;
-  c.getContext('2d').drawImage(v, (v.videoWidth - s) / 2, (v.videoHeight - s) / 2, s, s, 0, 0, 240, 240);
-  return c.toDataURL('image/jpeg', 0.7);
+function stopCam() { GEN++; SHOT_BOX = null; PHOTO = ''; PHOTO_P = null; }
+/** The photo for this punch. Waits (up to 4 s) if it is still being prepared. */
+async function snapWait() {
+  if (PHOTO || !PHOTO_P) return PHOTO;
+  const gen = GEN;
+  const r = await Promise.race([PHOTO_P, new Promise(ok => setTimeout(() => ok(''), 4000))]);
+  return gen === GEN ? (r || PHOTO) : '';
 }
 
 /* ---------------- keypad ----------------
@@ -493,13 +509,13 @@ function padSheet(cfg) {
   const el = openLayer(
     '<div class="panel"><header><div><div class="label">' + esc(cfg.label || 'Enter your PIN') + '</div><h3>' + esc(cfg.title || '') + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header>' +
     '<div class="body">' + (cfg.lead ? '<div class="lead">' + esc(cfg.lead) + '</div>' : '') +
-    (cfg.cam ? '<div class="cam' + (cfg.camSmall ? ' sm' : '') + '"><video playsinline muted></video><div class="nocam">Starting camera…</div></div>' : '') +
+    (cfg.cam ? '<button type="button" class="cam' + (cfg.camSmall ? ' sm' : '') + '" aria-label="Take your photo"><img alt=""><div class="nocam">Tap to take your photo</div></button>' : '') +
     (phone ? '<div class="phonebox" id="dots" aria-live="polite">(___) ___-____</div>' : '<div class="dots" id="dots">' + '<span></span>'.repeat(len) + '</div>') +
     '<div class="pad">' + [1,2,3,4,5,6,7,8,9].map(n => '<button data-k="' + n + '">' + n + '</button>').join('') +
     '<button class="fn" data-k="c">Clear all</button><button data-k="0">0</button><button class="fn" data-k="b">' + BACK + '</button></div>' +
     '<div class="msg" id="pMsg" role="alert">' + esc(cfg.error || '') + '</div></div></div>');
   el.querySelector('[data-close]').onclick = () => closeLayer();
-  if (cfg.cam) startCam(el.querySelector('.cam')); else stopCam();
+  if (cfg.cam) startCam(el.querySelector('.cam'), cfg.photo); else stopCam();
   let pin = '', busy = false, waitT = null;
   const draw = () => {
     if (phone) $('#dots').textContent = pin ? fmtPhone(pin) : '(___) ___-____';
@@ -537,8 +553,8 @@ function digitsOf(v) { return String(v || '').replace(/\D/g, '').slice(-10); }
 /** Clock in or out. o: { employeeId | phone, title, label, lead, error } */
 function pinSheet(o) {
   padSheet({
-    label: o.label || 'Enter your PIN', title: o.title, lead: o.lead, cam: true, camSmall: !!o.phone, error: o.error,
-    onComplete: (pin, ctx) => submitPunch(o, pin, ctx, snap())
+    label: o.label || 'Enter your PIN', title: o.title, lead: o.lead, cam: true, camSmall: !!o.phone, error: o.error, photo: o.photo,
+    onComplete: async (pin, ctx) => { ctx.busy('Checking…'); submitPunch(o, pin, ctx, await snapWait()); }
   });
 }
 /** "Not on the list?": cell number on the keypad first, then the PIN (with the camera). */
@@ -584,7 +600,7 @@ function setupSheet(o, step, err) {
     label: 'Confirm your PIN', title: 'Enter it again', lead: 'This also clocks you in.', cam: true,
     onComplete: async (pin, ctx) => {
       if (pin !== o.newPin) return setupSheet(o, 2, 'Those didn’t match. Pick your PIN again.');
-      const photo = snap();
+      const photo = await snapWait();
       ctx.busy('Saving your PIN…');
       try {
         await api('setPin', Object.assign({ setupCode: o.code, newPin: pin }, who));
@@ -636,6 +652,7 @@ function punchClock() {
 }
 
 function submitPunch(o, pin, ctx, photo) {
+  if (photo) o.photo = photo;
   const p = (ROSTER.people || []).find(x => x.id === o.employeeId);
   const job = {
     cid: uid(), pin, photo, at: punchClock(),
@@ -646,12 +663,19 @@ function submitPunch(o, pin, ctx, photo) {
   runJob(o, job, {}, ctx);
 }
 function payload(job, flags) {
-  return Object.assign({ pin: job.pin, photo: job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess }, job.who, flags || {});
+  const later = !!(flags && flags.photoLater);
+  return Object.assign({ pin: job.pin, photo: later ? '' : job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess }, job.who, flags || {});
+}
+/** Sends the punch photo after the punch is saved, so nobody waits for Google Drive. One retry. */
+function sendPhoto(job, r) {
+  if (!job.photo || !r.photoPending || !r.ticket || !r.punchId) return;
+  const go = () => api('photo', { ticket: r.ticket, punchId: r.punchId, photo: job.photo });
+  go().catch(() => setTimeout(() => go().catch(() => {}), 8000));
 }
 const INFLIGHT = {};
 async function runJob(o, job, flags, ctx) {
   if (navigator.onLine === false) { await qPut(job); setNet(false); return savedOffline(job); }
-  const req = api('clock', payload(job, flags));
+  const req = api('clock', payload(job, Object.assign({ photoLater: !!job.photo }, flags)));
   INFLIGHT[job.cid] = true;
   req.then(() => delete INFLIGHT[job.cid], () => delete INFLIGHT[job.cid]);
   const slowNote = setTimeout(() => ctx.busy('Still checking… slow internet'), 3500);
@@ -681,6 +705,7 @@ function punchResult(o, job, r, quiet) {
   if (r.confirm) return confirmSheet('Clock out?', 'You clocked in at ' + r.sinceLabel, 'That was only a few minutes ago. End your shift now?', 'No, keep me in', 'Yes, clock out', () => resend(o, job, { confirm: true }));
   if (r.switchStore) return confirmSheet('Another store', 'Clocked in at ' + r.otherStore, 'You’ve been clocked in at ' + r.otherStore + ' since ' + r.sinceLabel + '. Clock out there and in here?', 'Don’t clock in', 'Yes, switch to here', () => resend(o, job, { switchStore: true, confirm: true }));
   takeRoster(r.roster); setNet(true);
+  sendPhoto(job, r);
   if (r.ticket && r.employeeId) RECENT[r.employeeId] = { ticket: r.ticket, punchId: r.punchId, type: r.type, time: r.time, at: Date.now() };
   if (quiet) return;
   doneSheet({ cid: job.cid, type: r.type, name: r.fullName || r.name, time: r.time });
@@ -871,7 +896,7 @@ function fmtHours(h) { const m = Math.round(h * 60); return Math.floor(m / 60) +
 const RESET_MS = 5 * 60000;
 let lastTouch = Date.now();
 setInterval(() => {
-  if (STALE || $('#kiosk').classList.contains('hidden') || Date.now() - lastTouch < RESET_MS) return;
+  if (CAM_OPEN || STALE || $('#kiosk').classList.contains('hidden') || Date.now() - lastTouch < RESET_MS) return;
   closeLayer(); const r = document.querySelector('.roster'); if (r) r.scrollTop = 0;
   STALE = true;
 }, 15000);
@@ -882,8 +907,7 @@ setInterval(() => {
 
 /* ---------------- self-update ----------------
    The backend tells every response which app version is current. When it differs, the app reloads
-   itself, but only when the screen is idle (no PIN pad or form open). There is no nightly reload:
-   every reload restarts the camera, and iPadOS may ask for camera permission again.
+   itself, but only when the screen is idle (no PIN pad or form open). No nightly reload.
    The service worker fetches app files from the network first, so a reload always gets the newest. */
 setInterval(() => {
   const idle = !$('#layer').innerHTML;
@@ -893,7 +917,7 @@ setInterval(() => {
     location.reload();
   }
 }, 15000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('p1.device') && !$('#kiosk').classList.contains('hidden')) { loadRoster(true); setTimeout(warmCam, 1000); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('p1.device') && !$('#kiosk').classList.contains('hidden')) loadRoster(true); });
 
 /* =====================================================================
    Daily welcome intro (approved Oct 29). Plays once per device per day,
