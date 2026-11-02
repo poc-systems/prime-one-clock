@@ -436,10 +436,9 @@ function choiceSheet(p) {
 }
 /* Clock-out after more than 4 hours with no break punch (Andre's wording). */
 function breakAskSheet(o, job) {
-  const el = openLayer('<div class="panel"><header><div><div class="label">Before you clock out</div><h3>Did you take a break today?</h3></div></header><div class="body">' +
-    '<div class="status">Prime One requires you to take a 30-minute break during your shift (not in the first or last hour of the shift).</div>' +
-    '<div class="row2" style="margin-top:18px"><button class="big out" data-b="no">No</button><button class="big" data-b="yes">Yes</button></div>' +
-    '<div class="lead" style="margin-top:16px">Next time, tap your name and choose Start break and End break.</div></div></div>');
+  const el = openLayer('<div class="panel"><header><div><div class="label">Before you clock out</div><h3>Did you get your 30-minute break today?</h3></div></header><div class="body">' +
+    '<div class="status">Everyone gets a 30-minute break each shift (not in the first or last hour).</div>' +
+    '<div class="row2" style="margin-top:18px"><button class="big out" data-b="no">No, couldn’t today</button><button class="big" data-b="yes">Yes</button></div></div></div>');
   const t = setTimeout(() => { if (document.body.contains(el)) resend(o, job, { breakAnswer: 'none' }); }, 40000);
   el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { clearTimeout(t); resend(o, job, { breakAnswer: b.dataset.b }); });
 }
@@ -907,7 +906,8 @@ function updateDone(r) {
   if (r.visiting) extra.push('<span style="color:var(--silver)">You’re on this store’s list until midnight.</span>');
   if (r.noPhoto) extra.push('<span style="color:var(--amber-d)">No photo was taken. Check the camera.</span>');
   if (r.type === 'BREAK') extra.push('Tap your name when you’re back and choose End break.');
-  if (r.breakAnswer === 'yes') extra.push('<span style="color:var(--amber-d)">30-minute break recorded. Punch your break next time.</span>');
+  if (r.breakAnswer === 'yes') extra.push('Got it. Next time, tap Start break and End break so it’s recorded.');
+  if (r.breakAnswer === 'no') extra.push('Thanks for the hard work today. Your full time is paid. Try to get your break next time, you’ve earned it.');
   const x = document.getElementById('dExtra'); if (x) x.innerHTML = extra.join('<br>');
   setDoneStatus('Saved', 'ok');
   const acts = $('#dActs'); if (!acts || !r.ticket) return;
