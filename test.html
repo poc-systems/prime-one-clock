@@ -906,8 +906,6 @@ function updateDone(r) {
   if (r.visiting) extra.push('<span style="color:var(--silver)">You’re on this store’s list until midnight.</span>');
   if (r.noPhoto) extra.push('<span style="color:var(--amber-d)">No photo was taken. Check the camera.</span>');
   if (r.type === 'BREAK') extra.push('Tap your name when you’re back and choose End break.');
-  if (r.breakAnswer === 'yes') extra.push('Got it. Next time, tap Start break and End break so it’s recorded.');
-  if (r.breakAnswer === 'no') extra.push('Thanks for the hard work today. Your full time is paid. Try to get your break next time, you’ve earned it.');
   const x = document.getElementById('dExtra'); if (x) x.innerHTML = extra.join('<br>');
   setDoneStatus('Saved', 'ok');
   const acts = $('#dActs'); if (!acts || !r.ticket) return;
