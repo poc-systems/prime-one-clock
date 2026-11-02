@@ -95,6 +95,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .msg.info{color:var(--lsilver)}
 .body .lead{color:var(--lsilver);font-size:16px;line-height:1.5;margin:-4px 0 18px}
 .tile.setpin{border-style:dashed;border-color:var(--silver)}
+.tile.brk{border-color:rgba(227,182,107,.6)}.tile.brk .st{color:var(--amber-d)}.tile.brk .st i{background:var(--amber-d)}
 .tile.away{border-color:rgba(227,182,107,.6)}.tile.away .st{color:var(--amber-d)}.tile.away .st i{background:var(--amber-d)}
 .tile .st{font-size:15px!important}
 .cam.sm{width:120px;height:120px;margin-bottom:14px}
@@ -385,6 +386,7 @@ function tileState(p) {
   if (p.pin === 'locked') return { cls: 'nopin', st: 'PIN locked · ' + textJuliana() };
   if (p.pin === 'none') return { cls: 'setpin', st: 'First time? Set up your PIN' };
   if (p.elsewhere) return { cls: 'away', st: 'Clocked in at ' + p.elsewhere + ' · tap to switch here' };
+  if (p.status === 'break') return { cls: 'brk', st: 'On break since ' + p.sinceLabel };
   if (p.status === 'in') return { cls: 'in', st: 'In since ' + p.sinceLabel };
   return { cls: '', st: 'Out' };
 }
@@ -407,7 +409,8 @@ function renderTiles() {
     if (rec && Date.now() - rec.at < 115000) return undoSheet(p, rec);
     if (p.pin === 'locked') return lockedSheet(p.name);
     if (p.pin === 'none') return setupSheet({ employeeId: p.id, title: p.name });
-    pinSheet({ employeeId: p.id, title: p.name, label: p.elsewhere ? 'Switch to this store' : p.status === 'in' ? 'Clock out' : 'Clock in' });
+    if (!p.elsewhere && (p.status === 'in' || p.status === 'break')) return choiceSheet(p);
+    pinSheet({ employeeId: p.id, title: p.name, label: p.elsewhere ? 'Switch to this store' : 'Clock in' });
   });
 }
 $('#btnOther').onclick = () => phoneSheet();
@@ -417,11 +420,35 @@ function lockedSheet(name) {
   el.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeLayer());
 }
 
+/* Working: Start break or Clock out. On break: End break or Clock out. (Clocking out without
+   a break is always allowed; the clock asks about the break at clock-out.) */
+const TYPE_DONE = { IN: 'clocked in', OUT: 'clocked out', BREAK: 'started your break', BACK: 'ended your break' };
+function choiceSheet(p) {
+  const onBreak = p.status === 'break';
+  const el = openLayer('<div class="panel"><header><div><div class="label">' + (onBreak ? 'On break since ' : 'In since ') + esc(p.sinceLabel || '') + '</div><h3>' + esc(p.name) + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body">' +
+    '<button class="big" data-a="' + (onBreak ? 'back' : 'break') + '">' + (onBreak ? 'End break' : 'Start break') + '</button>' +
+    '<button class="big out" style="margin-top:12px" data-a="out">Clock out</button></div></div>');
+  el.querySelector('[data-close]').onclick = () => closeLayer();
+  el.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    pinSheet({ employeeId: p.id, title: p.name, action: a, label: a === 'break' ? 'Start break' : a === 'back' ? 'End break' : 'Clock out' });
+  });
+}
+/* Clock-out after more than 4 hours with no break punch (Andre's wording). */
+function breakAskSheet(o, job) {
+  const el = openLayer('<div class="panel"><header><div><div class="label">Before you clock out</div><h3>Did you take a break today?</h3></div></header><div class="body">' +
+    '<div class="status">Prime One requires you to take a 30-minute break during your shift (not in the first or last hour of the shift).</div>' +
+    '<div class="row2" style="margin-top:18px"><button class="big out" data-b="no">No</button><button class="big" data-b="yes">Yes</button></div>' +
+    '<div class="lead" style="margin-top:16px">Next time, tap your name and choose Start break and End break.</div></div></div>');
+  const t = setTimeout(() => { if (document.body.contains(el)) resend(o, job, { breakAnswer: 'none' }); }, 40000);
+  el.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { clearTimeout(t); resend(o, job, { breakAnswer: b.dataset.b }); });
+}
+
 /* "Not me? Undo" stays available for 2 minutes: tapping your tile again offers it, no PIN needed. */
 const RECENT = {};
 function undoSheet(p, rec) {
   const el = openLayer('<div class="panel"><header><div><div class="label">Just now</div><h3>' + esc(p.name) + '</h3></div><button class="x" data-close aria-label="Close">' + ICON.x + '</button></header><div class="body">' +
-    '<div class="status">You ' + (rec.type === 'IN' ? 'clocked in' : 'clocked out') + ' at ' + esc(rec.time) + '. Was that a mistake?</div>' +
+    '<div class="status">You ' + (TYPE_DONE[rec.type] || 'punched') + ' at ' + esc(rec.time) + '. Was that a mistake?</div>' +
     '<div class="row2"><button class="ghost" style="margin:0" data-again>No, enter my PIN</button><button class="big out" data-undo>Undo that punch</button></div></div></div>');
   el.querySelector('[data-close]').onclick = () => closeLayer();
   el.querySelector('[data-again]').onclick = () => { delete RECENT[p.id]; renderTiles(); el.remove(); $('#tiles').querySelector('[data-id="' + p.id + '"]').click(); };
@@ -657,14 +684,15 @@ function submitPunch(o, pin, ctx, photo) {
   const job = {
     cid: uid(), pin, photo, at: punchClock(),
     who: { employeeId: o.employeeId || '', phone: o.employeeId ? '' : o.phone || '' },
-    name: p ? p.name.split(' ')[0] : '', guess: p ? (p.status === 'in' && !p.elsewhere ? 'OUT' : 'IN') : ''
+    action: o.action || '',
+    name: p ? p.name.split(' ')[0] : '', guess: !p || p.elsewhere || p.status === 'out' ? (p ? 'IN' : '') : p.status === 'in' ? (o.action === 'break' ? 'BREAK' : 'OUT') : (o.action === 'out' ? 'OUT' : 'BACK')
   };
   ctx.busy('Checking…');
   runJob(o, job, {}, ctx);
 }
 function payload(job, flags) {
   const later = !!(flags && flags.photoLater);
-  return Object.assign({ pin: job.pin, photo: later ? '' : job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess }, job.who, flags || {});
+  return Object.assign({ pin: job.pin, photo: later ? '' : job.photo, cid: job.cid, at: job.at.ms, timeSource: job.at.source, guess: job.guess, action: job.action || '' }, job.who, job.flags || {}, flags || {});
 }
 /** Sends the punch photo after the punch is saved, so nobody waits for Google Drive. One retry. */
 function sendPhoto(job, r) {
@@ -689,7 +717,8 @@ async function runJob(o, job, flags, ctx) {
     savedOffline(job);
     req.then(res => {
       qDel(job.cid);
-      if (res.confirm || res.switchStore) { if (!$('#layer').innerHTML || CUR_DONE === job.cid) punchResult(o, job, res); return; }
+      if (res.askBreak && $('#layer').innerHTML && CUR_DONE !== job.cid) { job.flags = Object.assign({}, job.flags, { breakAnswer: 'none' }); qPut(job); return; }
+      if (res.confirm || res.switchStore || res.askBreak || res.stale) { if (!$('#layer').innerHTML || CUR_DONE === job.cid) punchResult(o, job, res); return; }
       punchResult(o, job, res, CUR_DONE !== job.cid);
     }).catch(e => {
       if (isNetErr(e) || !isFinal(e)) return;            // the saved copy is retried later
@@ -703,6 +732,8 @@ async function runJob(o, job, flags, ctx) {
 }
 function punchResult(o, job, r, quiet) {
   if (r.confirm) return confirmSheet('Clock out?', 'You clocked in at ' + r.sinceLabel, 'That was only a few minutes ago. End your shift now?', 'No, keep me in', 'Yes, clock out', () => resend(o, job, { confirm: true }));
+  if (r.stale) { takeRoster(r.roster); closeLayer(); return toast('Your status changed. Tap your name again.', 4500); }
+  if (r.askBreak) return breakAskSheet(o, job);
   if (r.switchStore) return confirmSheet('Another store', 'Clocked in at ' + r.otherStore, 'You’ve been clocked in at ' + r.otherStore + ' since ' + r.sinceLabel + '. Clock out there and in here?', 'Don’t clock in', 'Yes, switch to here', () => resend(o, job, { switchStore: true, confirm: true }));
   takeRoster(r.roster); setNet(true);
   sendPhoto(job, r);
@@ -712,6 +743,7 @@ function punchResult(o, job, r, quiet) {
   updateDone(r);
 }
 function resend(o, job, flags) {
+  job.flags = Object.assign({}, job.flags, flags);
   openLayer('<div class="panel"><div class="body" style="text-align:center;padding:48px 28px"><span class="spin"></span><span class="spin"></span><span class="spin"></span><div class="status" style="margin-top:18px" id="pMsg">Saving…</div></div></div>');
   const ctx = { busy(t) { const m = $('#pMsg'); if (m) m.textContent = t; }, fail: m => { closeLayer(); toast(m, 5000); }, wait() { closeLayer(); } };
   runJob(o, job, flags, ctx);
@@ -740,7 +772,7 @@ function confirmSheet(label, title, text, noLabel, yesLabel, yes) {
 }
 function savedOffline(job) {
   const p = (ROSTER.people || []).find(x => x.id === job.who.employeeId);
-  if (p && job.guess) { p.status = job.guess === 'IN' ? 'in' : 'out'; p.sinceLabel = msLabel(job.at.ms); p.elsewhere = ''; renderTiles(); }
+  if (p && job.guess) { p.status = job.guess === 'IN' || job.guess === 'BACK' ? 'in' : job.guess === 'BREAK' ? 'break' : 'out'; p.sinceLabel = msLabel(job.at.ms); p.elsewhere = ''; renderTiles(); }
   doneSheet({ cid: job.cid, type: job.guess, name: job.name || ('Cell ending ' + digitsOf(job.who.phone).slice(-4)), time: msLabel(job.at.ms) });
   setDoneStatus('Saved on this iPad. Your PIN is checked when the internet is back.', 'warn');
 }
@@ -858,10 +890,10 @@ let CUR_DONE = '', doneT;
 function doneSheet(p) {
   stopCam();
   CUR_DONE = p.cid || '';
-  const isIn = p.type === 'IN', isOut = p.type === 'OUT';
+  const isIn = p.type === 'IN', isOut = p.type === 'OUT', isBrk = p.type === 'BREAK', isBack = p.type === 'BACK';
   const el = openLayer('<div class="panel"><div class="done ' + (isIn ? 'is-in' : isOut ? 'is-out' : '') + '">' + ICON.check +
-    '<div class="label" style="margin-top:18px" id="dEye">' + (isIn ? 'Start of shift' : isOut ? 'End of shift' : 'Time clock') + '</div>' +
-    '<div class="big-io" id="dTitle">' + (isIn ? 'IN' : isOut ? 'OUT' : 'SAVED') + '</div><div class="who" id="dWho">' + esc(p.name || '') + '</div><div class="when" id="dWhen">' + (p.type ? (isIn ? 'Clocked in at ' : 'Clocked out at ') + esc(p.time) : 'Punch saved at ' + esc(p.time)) + '</div>' +
+    '<div class="label" style="margin-top:18px" id="dEye">' + (isIn ? 'Start of shift' : isOut ? 'End of shift' : isBrk || isBack ? 'Break' : 'Time clock') + '</div>' +
+    '<div class="big-io" id="dTitle">' + (isIn ? 'IN' : isOut ? 'OUT' : isBrk ? 'BREAK' : isBack ? 'BACK' : 'SAVED') + '</div><div class="who" id="dWho">' + esc(p.name || '') + '</div><div class="when" id="dWhen">' + (p.type ? (isIn ? 'Clocked in at ' : isOut ? 'Clocked out at ' : isBrk ? 'Break started at ' : 'Break ended at ') + esc(p.time) : 'Punch saved at ' + esc(p.time)) + '</div>' +
     '<p id="dExtra" style="min-height:26px"></p>' +
     '<div class="save ok" id="dSave">Saved</div>' +
     '<div id="dActs" style="min-height:62px"></div></div></div>', 'sheet full');
@@ -874,12 +906,14 @@ function updateDone(r) {
   if (r.type === 'OUT' && r.hoursToday != null) extra.push('Worked today: ' + fmtHours(r.hoursToday));
   if (r.visiting) extra.push('<span style="color:var(--silver)">You’re on this store’s list until midnight.</span>');
   if (r.noPhoto) extra.push('<span style="color:var(--amber-d)">No photo was taken. Check the camera.</span>');
+  if (r.type === 'BREAK') extra.push('Tap your name when you’re back and choose End break.');
+  if (r.breakAnswer === 'yes') extra.push('<span style="color:var(--amber-d)">30-minute break recorded. Punch your break next time.</span>');
   const x = document.getElementById('dExtra'); if (x) x.innerHTML = extra.join('<br>');
   setDoneStatus('Saved', 'ok');
   const acts = $('#dActs'); if (!acts || !r.ticket) return;
-  acts.innerHTML = (r.openWarning ? '<div class="warn" style="text-align:left;margin-top:18px">Your clock-in on ' + esc(r.openWarning) + ' has no clock-out. ' + esc(textJuliana()) + ' the time you left.</div>' : '') +
+  acts.innerHTML = (r.reminder ? '<div class="warn" style="text-align:left;margin-top:18px"><b>Break reminder.</b> ' + esc(r.reminder) + '</div>' : '') + (r.openWarning ? '<div class="warn" style="text-align:left;margin-top:18px">Your clock-in on ' + esc(r.openWarning) + ' has no clock-out. ' + esc(textJuliana()) + ' the time you left.</div>' : '') +
     '<button class="ghost strong" data-undo style="margin-top:14px">Not me? Undo</button>';
-  if (r.openWarning) { clearTimeout(doneT); doneT = setTimeout(() => { if (CUR_DONE) { CUR_DONE = ''; closeLayer(); } }, 15000); }
+  if (r.openWarning || r.reminder) { clearTimeout(doneT); doneT = setTimeout(() => { if (CUR_DONE) { CUR_DONE = ''; closeLayer(); } }, 15000); }
   const u = acts.querySelector('[data-undo]');
   u.onclick = async () => {
     clearTimeout(doneT); u.disabled = true; u.innerHTML = '<span class="spin"></span>';
